@@ -32,8 +32,8 @@
 
 final List<List<LevelData>> sectionLevels = [
   [
-    LevelData('Halo, Tubuhku!', 'Kenali anggota tubuh dengan mengetuk dan mencocokkan'),
     LevelData('Semua Bagian Punya Fungsi', 'Cocokkan organ tubuh dengan fungsinya'),
+    LevelData('Halo, Tubuhku!', 'Kenali anggota tubuh dengan mengetuk dan mencocokkan'),
     LevelData('Tubuhku Berharga', 'Pilih kegiatan baik dan buruk untuk tubuh'),
     LevelData('Area Pribadi', 'Kenali bagian tubuh yang bersifat pribadi'),
     LevelData('Siapa yang Boleh Membantu?', 'Sortir siapa yang boleh membantu'),
