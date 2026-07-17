@@ -141,7 +141,7 @@ class _Level1ScreenState extends State<Level1Screen> {
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
+                  padding: const EdgeInsets.fromLTRB(0, 40, 0, 24),
                   child: Column(
                     children: [
                       Text('Apa saja bagian tubuhku?',
@@ -151,7 +151,7 @@ class _Level1ScreenState extends State<Level1Screen> {
                       _buildGameArea(),
                       const SizedBox(height: 12),
                       _buildLabelsRow(),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 32),
                       SizedBox(
                         width: 200,
                         height: 48,
