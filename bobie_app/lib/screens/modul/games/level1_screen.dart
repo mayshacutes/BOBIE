@@ -20,8 +20,8 @@ class _Level1ScreenState extends State<Level1Screen> {
 
   final List<_BodyPart> _bodyParts = [
     _BodyPart('rambut', 'Rambut', 0.50, 0.07, 'left', 0.07),
-    _BodyPart('mata', 'Mata', 0.50, 0.19, 'right', 0.19),
-    _BodyPart('mulut', 'Mulut', 0.50, 0.33, 'left', 0.35),
+    _BodyPart('mata', 'Mata', 0.55, 0.22, 'right', 0.22),
+    _BodyPart('mulut', 'Mulut', 0.50, 0.29, 'left', 0.31),
     _BodyPart('tangan', 'Tangan', 0.20, 0.51, 'left', 0.53),
     _BodyPart('perut', 'Perut', 0.50, 0.57, 'right', 0.51),
     _BodyPart('kaki', 'Kaki', 0.50, 0.85, 'right', 0.85),
@@ -224,15 +224,20 @@ class _Level1ScreenState extends State<Level1Screen> {
         const boxW = 68.0;
         const boxH = 28.0;
 
+        const boxW = 68.0;
+        const boxH = 28.0;
+        final leftBoxRight = 24.0 + boxW;
+        final rightBoxLeft = W - 24.0 - boxW;
+
         final arrows = <_ArrowData>[];
         for (var part in _bodyParts) {
           final mX = imageLeft + part.markerX * imageWidth;
           final mY = imageTop + part.markerY * imageHeight;
           final bY = imageTop + part.boxY * areaHeight;
           if (part.side == 'left') {
-            arrows.add(_ArrowData(Offset(W * 0.22, bY), Offset(mX, mY)));
+            arrows.add(_ArrowData(Offset(leftBoxRight, bY), Offset(mX, mY)));
           } else {
-            arrows.add(_ArrowData(Offset(W * 0.78, bY), Offset(mX, mY)));
+            arrows.add(_ArrowData(Offset(rightBoxLeft, bY), Offset(mX, mY)));
           }
         }
 
@@ -302,13 +307,13 @@ class _Level1ScreenState extends State<Level1Screen> {
               for (var part in _bodyParts)
                 if (part.side == 'left')
                   Positioned(
-                    left: 4,
+                    left: 24,
                     top: imageTop + part.boxY * areaHeight - boxH / 2,
                     child: _buildDropBox(part, boxW, boxH),
                   )
                 else
                   Positioned(
-                    right: 4,
+                    right: 24,
                     top: imageTop + part.boxY * areaHeight - boxH / 2,
                     child: _buildDropBox(part, boxW, boxH),
                   ),
@@ -380,9 +385,7 @@ class _Level1ScreenState extends State<Level1Screen> {
                         ),
                     ],
                   )
-                : Text(part.label,
-                    style: GoogleFonts.jua(fontSize: 10, color: AppColors.gray),
-                    textAlign: TextAlign.center),
+                  : const SizedBox(),
           ),
         );
       },
@@ -391,58 +394,83 @@ class _Level1ScreenState extends State<Level1Screen> {
 
   Widget _buildLabelsRow() {
     if (submitted) return const SizedBox();
-    return Wrap(
-      spacing: 8,
-      runSpacing: 6,
-      alignment: WrapAlignment.center,
-      children: _availableLabels.map((label) {
-        final part = _bodyParts.firstWhere((p) => p.id == label);
-        return Draggable<String>(
-          data: label,
-          feedback: Material(
-            elevation: 4,
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.primaryBlue,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(part.label,
-                  style: GoogleFonts.jua(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
-            ),
-          ),
-          childWhenDragging: Opacity(
-            opacity: 0.3,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.lightGray,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.gray),
-              ),
-              child: Text(part.label, style: GoogleFonts.jua(fontSize: 13, color: AppColors.gray)),
-            ),
-          ),
+    final labels = _bodyParts.map((p) => p.id).toList();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: labels.sublist(0, 3).map((id) => _buildLabelChip(id)).toList(),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: labels.sublist(3, 6).map((id) => _buildLabelChip(id)).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLabelChip(String labelId) {
+    final part = _bodyParts.firstWhere((p) => p.id == labelId);
+    final isAvailable = _availableLabels.contains(labelId);
+    if (!isAvailable) return const SizedBox(width: 90);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Draggable<String>(
+        data: labelId,
+        feedback: Material(
+          elevation: 4,
+          borderRadius: BorderRadius.circular(12),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            width: 82,
+            height: 36,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Colors.white,
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFDD52E), Color(0xFF977F1B)],
+              ),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.primaryBlue, width: 1.5),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
             ),
             child: Text(part.label,
-                style: GoogleFonts.jua(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
+                style: GoogleFonts.jua(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF3D3A3B))),
           ),
-        );
-      }).toList(),
+        ),
+        childWhenDragging: Opacity(
+          opacity: 0.3,
+          child: Container(
+            width: 82,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.lightGray,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(part.label,
+                style: GoogleFonts.jua(fontSize: 12, color: AppColors.gray)),
+          ),
+        ),
+        child: Container(
+          width: 82,
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFDD52E), Color(0xFF977F1B)],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Text(part.label,
+              style: GoogleFonts.jua(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF3D3A3B))),
+        ),
+      ),
     );
   }
 }
