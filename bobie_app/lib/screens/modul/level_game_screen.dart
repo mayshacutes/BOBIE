@@ -189,27 +189,33 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
 
   Widget _buildTopBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Row(
         children: [
-          IconButton(
-              icon: const Icon(Icons.home, color: AppColors.darkGray),
-              onPressed: () => Navigator.pop(context)),
+          _CircleButton(
+            icon: Icons.home,
+            gradient: const [Color(0xFF75D035), Color(0xFF388105)],
+            onPressed: () => Navigator.pop(context),
+          ),
+          const SizedBox(width: 8),
           Text('Level ${_level.number}',
               style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.black)),
           const Spacer(),
-          IconButton(
-              icon: const Icon(Icons.replay, color: AppColors.darkGray),
-              onPressed: () {
-                setState(() {
-                  showResult = false;
-                  _dropTargets = {for (var p in _bodyParts) p.id: null};
-                  _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
-                });
-              }),
-          IconButton(
-            icon: Icon(soundOn ? Icons.volume_up : Icons.volume_off,
-                color: soundOn ? AppColors.primaryBlue : AppColors.darkGray),
+          _CircleButton(
+            icon: Icons.replay,
+            gradient: const [Color(0xFFEAAA0A), Color(0xFF9A7413)],
+            onPressed: () {
+              setState(() {
+                showResult = false;
+                _dropTargets = {for (var p in _bodyParts) p.id: null};
+                _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
+              });
+            },
+          ),
+          const SizedBox(width: 4),
+          _CircleButton(
+            icon: soundOn ? Icons.volume_up : Icons.volume_off,
+            gradient: const [Color(0xFFE87E45), Color(0xFFA64410)],
             onPressed: () => setState(() => soundOn = !soundOn),
           ),
         ],
@@ -390,4 +396,39 @@ class _BodyPart {
   final double relX;
   final double relY;
   const _BodyPart(this.id, this.label, this.relX, this.relY);
+}
+
+class _CircleButton extends StatelessWidget {
+  final IconData icon;
+  final List<Color> gradient;
+  final VoidCallback onPressed;
+
+  const _CircleButton({
+    required this.icon,
+    required this.gradient,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: gradient),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: gradient.last.withValues(alpha: 0.3),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(icon, color: Colors.white, size: 20),
+      ),
+    );
+  }
 }

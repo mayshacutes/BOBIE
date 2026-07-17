@@ -20,11 +20,11 @@ class _Level1ScreenState extends State<Level1Screen> {
 
   final List<_BodyPart> _bodyParts = [
     _BodyPart('rambut', 'Rambut', 0.50, 0.07, 'left', 0.07),
-    _BodyPart('mata', 'Mata', 0.55, 0.22, 'right', 0.22),
-    _BodyPart('mulut', 'Mulut', 0.50, 0.29, 'left', 0.31),
+    _BodyPart('mata', 'Mata', 0.58, 0.25, 'right', 0.22),
+    _BodyPart('mulut', 'Mulut', 0.50, 0.26, 'left', 0.31),
     _BodyPart('tangan', 'Tangan', 0.20, 0.51, 'left', 0.53),
     _BodyPart('perut', 'Perut', 0.50, 0.57, 'right', 0.51),
-    _BodyPart('kaki', 'Kaki', 0.50, 0.85, 'right', 0.85),
+    _BodyPart('kaki', 'Kaki', 0.56, 0.85, 'right', 0.85),
   ];
 
   late Map<String, String?> _dropTargets;
@@ -179,27 +179,33 @@ class _Level1ScreenState extends State<Level1Screen> {
 
   Widget _buildTopBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Row(
         children: [
-          IconButton(
-              icon: const Icon(Icons.home, color: AppColors.darkGray),
-              onPressed: () => Navigator.pop(context)),
+          _CircleButton(
+            icon: Icons.home,
+            gradient: const [Color(0xFF75D035), Color(0xFF388105)],
+            onPressed: () => Navigator.pop(context),
+          ),
+          const SizedBox(width: 8),
           Text('Level 1',
               style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.black)),
           const Spacer(),
-          IconButton(
-              icon: const Icon(Icons.replay, color: AppColors.darkGray),
-              onPressed: () {
-                setState(() {
-                  submitted = false;
-                  _dropTargets = {for (var p in _bodyParts) p.id: null};
-                  _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
-                });
-              }),
-          IconButton(
-            icon: Icon(soundOn ? Icons.volume_up : Icons.volume_off,
-                color: soundOn ? AppColors.primaryBlue : AppColors.darkGray),
+          _CircleButton(
+            icon: Icons.replay,
+            gradient: const [Color(0xFFEAAA0A), Color(0xFF9A7413)],
+            onPressed: () {
+              setState(() {
+                submitted = false;
+                _dropTargets = {for (var p in _bodyParts) p.id: null};
+                _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
+              });
+            },
+          ),
+          const SizedBox(width: 4),
+          _CircleButton(
+            icon: soundOn ? Icons.volume_up : Icons.volume_off,
+            gradient: const [Color(0xFFE87E45), Color(0xFFA64410)],
             onPressed: () => setState(() => soundOn = !soundOn),
           ),
         ],
@@ -527,4 +533,39 @@ class _ArrowPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ArrowPainter oldDelegate) => true;
+}
+
+class _CircleButton extends StatelessWidget {
+  final IconData icon;
+  final List<Color> gradient;
+  final VoidCallback onPressed;
+
+  const _CircleButton({
+    required this.icon,
+    required this.gradient,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(colors: gradient),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: gradient.last.withValues(alpha: 0.3),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(icon, color: Colors.white, size: 20),
+      ),
+    );
+  }
 }
