@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../theme.dart';
 import '../../../models/app_user.dart';
 
+enum _LevelPhase { sectionA, sectionB }
+
 class Level1Screen extends StatefulWidget {
   final MascotGender gender;
 
@@ -15,8 +17,10 @@ class Level1Screen extends StatefulWidget {
 
 class _Level1ScreenState extends State<Level1Screen> {
   bool soundOn = true;
+  _LevelPhase _phase = _LevelPhase.sectionA;
   bool submitted = false;
   String? _highlightedPart;
+  final Set<String> _tappedInA = {};
 
   final List<_BodyPart> _bodyParts = [
     _BodyPart('rambut', 'Rambut', 0.50, 0.07, 'left', 0.07),
@@ -30,11 +34,25 @@ class _Level1ScreenState extends State<Level1Screen> {
   late Map<String, String?> _dropTargets;
   late List<String> _availableLabels;
 
-  @override
-  void initState() {
-    super.initState();
+  void _initGame() {
     _dropTargets = {for (var p in _bodyParts) p.id: null};
     _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
+  }
+
+  void _playSound(_BodyPart part) {
+    if (!soundOn) return;
+    setState(() => _highlightedPart = part.id);
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (mounted) setState(() => _highlightedPart = null);
+    });
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(part.label, style: GoogleFonts.jua(fontSize: 14)),
+        duration: const Duration(seconds: 1),
+        backgroundColor: AppColors.primaryBlue,
+      ),
+    );
   }
 
   void _onLabelDropped(String partId, String labelId) {
@@ -155,89 +173,160 @@ class _Level1ScreenState extends State<Level1Screen> {
     );
   }
 
-  Widget _buildResultButton({
-    required IconData icon,
-    required List<Color> gradient,
-    required String label,
-    required VoidCallback onPressed,
-  }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: gradient),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: gradient.last.withValues(alpha: 0.3),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Icon(icon, color: Colors.white, size: 22),
-          ),
-          const SizedBox(height: 4),
-          Text(label,
-              style: GoogleFonts.jua(fontSize: 11, fontWeight: FontWeight.w600, color: gradient.first)),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
-            _buildTopBar(),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 40, 0, 24),
-                  child: Column(
-                    children: [
-                      Text('Apa saja bagian tubuhku?',
-                          style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.black),
-                          textAlign: TextAlign.center),
-                      const SizedBox(height: 8),
-                      _buildGameArea(),
-                      const SizedBox(height: 12),
-                      _buildLabelsRow(),
-                      const SizedBox(height: 32),
-                      SizedBox(
-                        width: 200,
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: (_allFilled && !submitted) ? _submit : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF75D035),
-                            disabledBackgroundColor: AppColors.gray,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                          ),
-                          child: Text(submitted ? 'Selesai' : 'Submit',
-                              style: GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+        child: switch (_phase) {
+          _LevelPhase.sectionA => _buildSectionA(),
+          _LevelPhase.sectionB => _buildSectionB(),
+        },
       ),
     );
   }
 
-  Widget _buildTopBar() {
+  // ─────────────────────────── SECTION A ───────────────────────────
+
+  Widget _buildSectionA() {
+    return Column(
+      children: [
+        _buildTopBar('Halo, Tubuhku!'),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            child: Column(
+              children: [
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final cw = constraints.maxWidth;
+                      final ch = cw * 1.3;
+                      return Stack(
+                        children: [
+                          Center(
+                            child: Image.asset(
+                              'assets/images/bob_renang.png',
+                              width: cw * 0.85,
+                              height: ch * 0.85,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) => Center(
+                                child: Text('Gambar Bob',
+                                    style: GoogleFonts.jua(fontSize: 16, color: AppColors.darkGray)),
+                              ),
+                            ),
+                          ),
+                          for (var part in _bodyParts)
+                            Positioned(
+                              left: cw * part.markerX - 12,
+                              top: ch * part.markerY - 12,
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() => _tappedInA.add(part.id));
+                                  _playSound(part);
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  width: _tappedInA.contains(part.id) ? 16 : 24,
+                                  height: _tappedInA.contains(part.id) ? 16 : 24,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: _tappedInA.contains(part.id)
+                                        ? AppColors.green.withValues(alpha: 0.6)
+                                        : const Color(0xFFF25A67).withValues(alpha: 0.7),
+                                    border: Border.all(
+                                      color: _tappedInA.contains(part.id) ? AppColors.green : Colors.white,
+                                      width: 2,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFF25A67).withValues(alpha: 0.4),
+                                        blurRadius: 6,
+                                      ),
+                                    ],
+                                  ),
+                                  child: _tappedInA.contains(part.id)
+                                      ? const Icon(Icons.check, color: Colors.white, size: 10)
+                                      : const Icon(Icons.volume_up, color: Colors.white, size: 12),
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text('Klik bagian tubuh untuk mengetahui namanya',
+                    style: GoogleFonts.jua(fontSize: 14, color: AppColors.darkGray),
+                    textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: 220,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _initGame();
+                      setState(() => _phase = _LevelPhase.sectionB);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF75D035),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    ),
+                    child: Text('Uji Pengetahuanku',
+                        style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─────────────────────────── SECTION B ───────────────────────────
+
+  Widget _buildSectionB() {
+    return Column(
+      children: [
+        _buildTopBar('Apa saja bagian tubuhku?'),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
+              child: Column(
+                children: [
+                  _buildGameArea(),
+                  const SizedBox(height: 12),
+                  _buildLabelsRow(),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: 200,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: (_allFilled && !submitted) ? _submit : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF75D035),
+                        disabledBackgroundColor: AppColors.gray,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      ),
+                      child: Text(submitted ? 'Selesai' : 'Submit',
+                          style: GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─────────────────────── SHARED WIDGETS ───────────────────────
+
+  Widget _buildTopBar(String title) {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 6),
       child: Row(
@@ -248,18 +337,22 @@ class _Level1ScreenState extends State<Level1Screen> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 8),
-          Text('Level 1',
-              style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.black)),
+          Expanded(
+            child: Text(title,
+                style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.black)),
+          ),
           const Spacer(),
           _CircleButton(
             icon: Icons.replay,
             gradient: const [Color(0xFFEAAA0A), Color(0xFF9A7413)],
             onPressed: () {
-              setState(() {
-                submitted = false;
-                _dropTargets = {for (var p in _bodyParts) p.id: null};
-                _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
-              });
+              if (_phase == _LevelPhase.sectionB) {
+                setState(() {
+                  submitted = false;
+                  _dropTargets = {for (var p in _bodyParts) p.id: null};
+                  _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
+                });
+              }
             },
           ),
           const SizedBox(width: 4),
@@ -448,7 +541,7 @@ class _Level1ScreenState extends State<Level1Screen> {
                         ),
                     ],
                   )
-                  : const SizedBox(),
+                : const SizedBox(),
           ),
         );
       },
@@ -509,8 +602,7 @@ class _Level1ScreenState extends State<Level1Screen> {
               color: AppColors.lightGray,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(part.label,
-                style: GoogleFonts.jua(fontSize: 12, color: AppColors.gray)),
+            child: Text(part.label, style: GoogleFonts.jua(fontSize: 12, color: AppColors.gray)),
           ),
         ),
         child: Container(
@@ -533,6 +625,41 @@ class _Level1ScreenState extends State<Level1Screen> {
           child: Text(part.label,
               style: GoogleFonts.jua(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF3D3A3B))),
         ),
+      ),
+    );
+  }
+
+  Widget _buildResultButton({
+    required IconData icon,
+    required List<Color> gradient,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: gradient),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: gradient.last.withValues(alpha: 0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: Colors.white, size: 22),
+          ),
+          const SizedBox(height: 4),
+          Text(label,
+              style: GoogleFonts.jua(fontSize: 11, fontWeight: FontWeight.w600, color: gradient.first)),
+        ],
       ),
     );
   }
