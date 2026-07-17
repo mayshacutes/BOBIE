@@ -16,17 +16,14 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
   late List<Modul> _moduls;
   bool soundOn = true;
   bool showResult = false;
-  int? correctCount;
-  int? wrongCount;
-  String? _highlightedPart;
 
   final List<_BodyPart> _bodyParts = [
-    _BodyPart('rambut', 'Rambut', 0.50, 0.07, 70, 24),
-    _BodyPart('mata', 'Mata', 0.50, 0.19, 60, 22),
-    _BodyPart('mulut', 'Mulut', 0.50, 0.32, 60, 22),
-    _BodyPart('tangan', 'Tangan', 0.15, 0.52, 64, 24),
-    _BodyPart('perut', 'Perut', 0.50, 0.56, 64, 24),
-    _BodyPart('kaki', 'Kaki', 0.50, 0.84, 64, 24),
+    _BodyPart('rambut', 'Rambut', 0.50, 0.07),
+    _BodyPart('mata', 'Mata', 0.50, 0.19),
+    _BodyPart('mulut', 'Mulut', 0.50, 0.32),
+    _BodyPart('tangan', 'Tangan', 0.15, 0.52),
+    _BodyPart('perut', 'Perut', 0.50, 0.56),
+    _BodyPart('kaki', 'Kaki', 0.50, 0.84),
   ];
 
   late Map<String, String?> _dropTargets;
@@ -80,24 +77,13 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
   void _submit() {
     if (!_allFilled) return;
     int correct = 0;
-    int wrong = 0;
     for (var part in _bodyParts) {
-      if (_dropTargets[part.id] == part.id) {
-        correct++;
-      } else {
-        wrong++;
-      }
+      if (_dropTargets[part.id] == part.id) correct++;
     }
-    setState(() {
-      showResult = true;
-      correctCount = correct;
-      wrongCount = wrong;
-    });
+    setState(() => showResult = true);
 
     Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) {
-        _showCompletionDialog(correct);
-      }
+      if (mounted) _showCompletionDialog(correct);
     });
   }
 
@@ -111,33 +97,23 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
         backgroundColor: Colors.transparent,
         child: Container(
           padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-          ),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'SELESAI!',
-                style: GoogleFonts.jua(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.orange),
-              ),
+              Text('SELESAI!',
+                  style: GoogleFonts.jua(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.orange)),
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (i) {
-                  return Icon(
+                children: List.generate(3, (i) => Icon(
                     i < stars ? Icons.star : Icons.star_border,
                     color: const Color(0xFFF25A67),
-                    size: 36,
-                  );
-                }),
+                    size: 36)),
               ),
               const SizedBox(height: 8),
-              Text(
-                '$xp XP',
-                style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
-              ),
+              Text('$xp XP',
+                  style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -151,10 +127,8 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
                     backgroundColor: AppColors.green,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
                   ),
-                  child: Text(
-                    'Kembali',
-                    style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-                  ),
+                  child: Text('Kembali',
+                      style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
                 ),
               ),
             ],
@@ -175,20 +149,15 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   child: Column(
                     children: [
-                      const SizedBox(height: 8),
-                      Text(
-                        'Apa saja bagian tubuhku?',
-                        style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.black),
-                        textAlign: TextAlign.center,
-                      ),
+                      Text('Apa saja bagian tubuhku?',
+                          style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.black),
+                          textAlign: TextAlign.center),
                       const SizedBox(height: 12),
                       _buildBodyImage(),
                       const SizedBox(height: 16),
-                      if (showResult) _buildResultSummary(),
-                      const SizedBox(height: 12),
                       _buildLabelsRow(),
                       const SizedBox(height: 16),
                       SizedBox(
@@ -201,13 +170,11 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
                             disabledBackgroundColor: AppColors.gray,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                           ),
-                          child: Text(
-                            'Submit',
-                            style: GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
-                          ),
+                          child: Text('Submit',
+                              style: GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 8),
                     ],
                   ),
                 ),
@@ -225,31 +192,23 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.home, color: AppColors.darkGray),
-            onPressed: () => Navigator.pop(context),
-          ),
-          Text(
-            'Level ${_level.number}',
-            style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.black),
-          ),
+              icon: const Icon(Icons.home, color: AppColors.darkGray),
+              onPressed: () => Navigator.pop(context)),
+          Text('Level ${_level.number}',
+              style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.black)),
           const Spacer(),
           IconButton(
-            icon: const Icon(Icons.replay, color: AppColors.darkGray),
-            onPressed: () {
-              setState(() {
-                showResult = false;
-                correctCount = null;
-                wrongCount = null;
-                _dropTargets = {for (var p in _bodyParts) p.id: null};
-                _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
-              });
-            },
-          ),
+              icon: const Icon(Icons.replay, color: AppColors.darkGray),
+              onPressed: () {
+                setState(() {
+                  showResult = false;
+                  _dropTargets = {for (var p in _bodyParts) p.id: null};
+                  _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
+                });
+              }),
           IconButton(
-            icon: Icon(
-              soundOn ? Icons.volume_up : Icons.volume_off,
-              color: soundOn ? AppColors.primaryBlue : AppColors.darkGray,
-            ),
+            icon: Icon(soundOn ? Icons.volume_up : Icons.volume_off,
+                color: soundOn ? AppColors.primaryBlue : AppColors.darkGray),
             onPressed: () => setState(() => soundOn = !soundOn),
           ),
         ],
@@ -260,11 +219,11 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
   Widget _buildBodyImage() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final containerWidth = constraints.maxWidth;
-        final containerHeight = containerWidth * 1.3;
+        final cw = constraints.maxWidth;
+        final ch = cw * 1.3;
         return Container(
-          width: containerWidth,
-          height: containerHeight,
+          width: cw,
+          height: ch,
           decoration: BoxDecoration(
             color: AppColors.lightSkyBlue.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(16),
@@ -274,22 +233,20 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
               Center(
                 child: Image.asset(
                   'assets/images/bob_renang.png',
-                  width: containerWidth * 0.85,
-                  height: containerHeight * 0.85,
+                  width: cw * 0.85,
+                  height: ch * 0.85,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) => Center(
-                    child: Text(
-                      'Gambar Bob',
-                      style: GoogleFonts.jua(fontSize: 16, color: AppColors.darkGray),
-                    ),
+                    child: Text('Gambar Bob',
+                        style: GoogleFonts.jua(fontSize: 16, color: AppColors.darkGray)),
                   ),
                 ),
               ),
               for (var part in _bodyParts)
                 Positioned(
-                  left: containerWidth * part.relX - part.width / 2,
-                  top: containerHeight * part.relY - part.height / 2,
-                  child: _buildDropZone(part, containerWidth, containerHeight),
+                  left: cw * part.relX - 30,
+                  top: ch * part.relY - 12,
+                  child: _buildDropZone(part, 60, 24),
                 ),
             ],
           ),
@@ -298,7 +255,7 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
     );
   }
 
-  Widget _buildDropZone(_BodyPart part, double containerW, double containerH) {
+  Widget _buildDropZone(_BodyPart part, double w, double h) {
     final isFilled = _dropTargets[part.id] != null;
     final isCorrect = showResult && _dropTargets[part.id] == part.id;
     final isWrong = showResult && _dropTargets[part.id] != null && _dropTargets[part.id] != part.id;
@@ -308,35 +265,20 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
       builder: (context, candidateData, rejectedData) {
         final isHovering = candidateData.isNotEmpty;
         return GestureDetector(
-          onTap: () {
-            if (!showResult && soundOn) {
-              setState(() => _highlightedPart = part.id);
-              Future.delayed(const Duration(milliseconds: 600), () {
-                if (mounted) setState(() => _highlightedPart = null);
-              });
-              ScaffoldMessenger.of(context).clearSnackBars();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(part.label, style: GoogleFonts.jua(fontSize: 14)),
-                  duration: const Duration(seconds: 1),
-                  backgroundColor: AppColors.primaryBlue,
-                ),
-              );
-            }
-          },
+          onTap: isFilled ? () => _removeLabelFromSlot(part.id) : null,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            width: part.width,
-            height: part.height,
+            width: w,
+            height: h,
             decoration: BoxDecoration(
               color: isCorrect
-                  ? Colors.green.withValues(alpha: 0.3)
+                  ? Colors.green.withValues(alpha: 0.2)
                   : isWrong
-                      ? Colors.red.withValues(alpha: 0.3)
+                      ? Colors.red.withValues(alpha: 0.2)
                       : isHovering
-                          ? AppColors.primaryBlue.withValues(alpha: 0.2)
-                          : Colors.white.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(8),
+                          ? AppColors.primaryBlue.withValues(alpha: 0.15)
+                          : Colors.white.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(6),
               border: Border.all(
                 color: isCorrect
                     ? Colors.green
@@ -346,69 +288,25 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
                             ? AppColors.primaryBlue
                             : AppColors.gray,
                 width: isFilled ? 2 : 1.5,
-                strokeAlign: BorderSide.strokeAlignInside,
               ),
             ),
-            child: Center(
-              child: isFilled
-                  ? Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _dropTargets[part.id]!,
-                          style: GoogleFonts.jua(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isCorrect
-                                ? Colors.green
-                                : isWrong
-                                    ? Colors.red
-                                    : AppColors.primaryBlue,
-                          ),
-                        ),
-                        if (showResult)
-                          Padding(
-                            padding: const EdgeInsets.only(left: 2),
-                            child: Icon(
-                              isCorrect ? Icons.check_circle : Icons.cancel,
-                              color: isCorrect ? Colors.green : Colors.red,
-                              size: 14,
-                            ),
-                          ),
-                      ],
-                    )
-                  : _highlightedPart == part.id
-                      ? Text(
-                          part.label,
-                          style: GoogleFonts.jua(fontSize: 10, color: AppColors.primaryBlue, fontWeight: FontWeight.w600),
-                        )
-                      : Icon(Icons.drag_indicator, size: 16, color: AppColors.gray),
-            ),
+            child: isFilled
+                ? Center(
+                    child: Text(
+                      _dropTargets[part.id]!,
+                      style: GoogleFonts.jua(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: isCorrect ? Colors.green : isWrong ? Colors.red : AppColors.primaryBlue,
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Icon(Icons.drag_indicator, size: 14, color: AppColors.gray.withValues(alpha: 0.6)),
+                  ),
           ),
         );
       },
-    );
-  }
-
-  Widget _buildResultSummary() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.lightGray,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.check_circle, color: Colors.green, size: 20),
-          const SizedBox(width: 4),
-          Text('$correctCount', style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green)),
-          const SizedBox(width: 16),
-          Icon(Icons.cancel, color: Colors.red, size: 20),
-          const SizedBox(width: 4),
-          Text('$wrongCount', style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red)),
-        ],
-      ),
     );
   }
 
@@ -431,10 +329,8 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
                 color: AppColors.primaryBlue,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(
-                part.label,
-                style: GoogleFonts.jua(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
-              ),
+              child: Text(part.label,
+                  style: GoogleFonts.jua(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
             ),
           ),
           childWhenDragging: Opacity(
@@ -446,10 +342,7 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.gray),
               ),
-              child: Text(
-                part.label,
-                style: GoogleFonts.jua(fontSize: 13, color: AppColors.gray),
-              ),
+              child: Text(part.label, style: GoogleFonts.jua(fontSize: 13, color: AppColors.gray)),
             ),
           ),
           child: Container(
@@ -466,10 +359,8 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
                 ),
               ],
             ),
-            child: Text(
-              part.label,
-              style: GoogleFonts.jua(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryBlue),
-            ),
+            child: Text(part.label,
+                style: GoogleFonts.jua(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
           ),
         );
       }).toList(),
@@ -482,8 +373,5 @@ class _BodyPart {
   final String label;
   final double relX;
   final double relY;
-  final double width;
-  final double height;
-
-  const _BodyPart(this.id, this.label, this.relX, this.relY, this.width, this.height);
+  const _BodyPart(this.id, this.label, this.relX, this.relY);
 }
