@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../theme.dart';
@@ -18,12 +19,12 @@ class _Level1ScreenState extends State<Level1Screen> {
   String? _highlightedPart;
 
   final List<_BodyPart> _bodyParts = [
-    _BodyPart('rambut', 'Rambut', 0.50, 0.07),
-    _BodyPart('mata', 'Mata', 0.50, 0.19),
-    _BodyPart('mulut', 'Mulut', 0.50, 0.32),
-    _BodyPart('tangan', 'Tangan', 0.15, 0.52),
-    _BodyPart('perut', 'Perut', 0.50, 0.56),
-    _BodyPart('kaki', 'Kaki', 0.50, 0.84),
+    _BodyPart('rambut', 'Rambut', 0.50, 0.07, 'left', 0.07),
+    _BodyPart('mata', 'Mata', 0.50, 0.19, 'right', 0.19),
+    _BodyPart('mulut', 'Mulut', 0.50, 0.33, 'left', 0.35),
+    _BodyPart('tangan', 'Tangan', 0.20, 0.51, 'left', 0.53),
+    _BodyPart('perut', 'Perut', 0.50, 0.57, 'right', 0.51),
+    _BodyPart('kaki', 'Kaki', 0.50, 0.85, 'right', 0.85),
   ];
 
   late Map<String, String?> _dropTargets;
@@ -140,17 +141,17 @@ class _Level1ScreenState extends State<Level1Screen> {
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
                   child: Column(
                     children: [
                       Text('Apa saja bagian tubuhku?',
                           style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.black),
                           textAlign: TextAlign.center),
+                      const SizedBox(height: 8),
+                      _buildGameArea(),
                       const SizedBox(height: 12),
-                      _buildBodyImage(),
-                      const SizedBox(height: 16),
                       _buildLabelsRow(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
                       SizedBox(
                         width: 200,
                         height: 48,
@@ -206,25 +207,51 @@ class _Level1ScreenState extends State<Level1Screen> {
     );
   }
 
-  Widget _buildBodyImage() {
+  Widget _buildGameArea() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cw = constraints.maxWidth;
-        final ch = cw * 1.3;
-        return Container(
-          width: cw,
-          height: ch,
-          decoration: BoxDecoration(
-            color: AppColors.lightSkyBlue.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(16),
-          ),
+        final W = constraints.maxWidth;
+        final areaHeight = W * 1.3;
+
+        final marginX = W * 0.22;
+        final imageLeft = marginX;
+        final imageRight = W - marginX;
+        final imageWidth = imageRight - imageLeft;
+        final imageTop = areaHeight * 0.04;
+        final imageBottom = areaHeight * 0.96;
+        final imageHeight = imageBottom - imageTop;
+
+        const boxW = 68.0;
+        const boxH = 28.0;
+
+        final arrows = <_ArrowData>[];
+        for (var part in _bodyParts) {
+          final mX = imageLeft + part.markerX * imageWidth;
+          final mY = imageTop + part.markerY * imageHeight;
+          final bY = imageTop + part.boxY * areaHeight;
+          if (part.side == 'left') {
+            arrows.add(_ArrowData(Offset(W * 0.22, bY), Offset(mX, mY)));
+          } else {
+            arrows.add(_ArrowData(Offset(W * 0.78, bY), Offset(mX, mY)));
+          }
+        }
+
+        return SizedBox(
+          width: W,
+          height: areaHeight,
           child: Stack(
+            clipBehavior: Clip.none,
             children: [
-              Center(
+              Positioned.fill(
+                child: CustomPaint(painter: _ArrowPainter(arrows: arrows)),
+              ),
+              Positioned(
+                left: imageLeft,
+                top: imageTop,
+                width: imageWidth,
+                height: imageHeight,
                 child: Image.asset(
                   'assets/images/bob_renang.png',
-                  width: cw * 0.85,
-                  height: ch * 0.85,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) => Center(
                     child: Text('Gambar Bob',
@@ -234,10 +261,57 @@ class _Level1ScreenState extends State<Level1Screen> {
               ),
               for (var part in _bodyParts)
                 Positioned(
-                  left: cw * part.relX - 30,
-                  top: ch * part.relY - 12,
-                  child: _buildDropZone(part, 60, 24),
+                  left: imageLeft + part.markerX * imageWidth - 5,
+                  top: imageTop + part.markerY * imageHeight - 5,
+                  child: GestureDetector(
+                    onTap: () {
+                      if (!submitted && soundOn) {
+                        setState(() => _highlightedPart = part.id);
+                        Future.delayed(const Duration(milliseconds: 600), () {
+                          if (mounted) setState(() => _highlightedPart = null);
+                        });
+                        ScaffoldMessenger.of(context).clearSnackBars();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(part.label, style: GoogleFonts.jua(fontSize: 14)),
+                            duration: const Duration(seconds: 1),
+                            backgroundColor: AppColors.primaryBlue,
+                          ),
+                        );
+                      }
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: _highlightedPart == part.id ? 14 : 10,
+                      height: _highlightedPart == part.id ? 14 : 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _highlightedPart == part.id ? AppColors.orange : const Color(0xFFF25A67),
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (_highlightedPart == part.id ? AppColors.orange : const Color(0xFFF25A67))
+                                .withValues(alpha: 0.5),
+                            blurRadius: 4,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
+              for (var part in _bodyParts)
+                if (part.side == 'left')
+                  Positioned(
+                    left: 4,
+                    top: imageTop + part.boxY * areaHeight - boxH / 2,
+                    child: _buildDropBox(part, boxW, boxH),
+                  )
+                else
+                  Positioned(
+                    right: 4,
+                    top: imageTop + part.boxY * areaHeight - boxH / 2,
+                    child: _buildDropBox(part, boxW, boxH),
+                  ),
             ],
           ),
         );
@@ -245,7 +319,7 @@ class _Level1ScreenState extends State<Level1Screen> {
     );
   }
 
-  Widget _buildDropZone(_BodyPart part, double w, double h) {
+  Widget _buildDropBox(_BodyPart part, double boxW, double boxH) {
     final isFilled = _dropTargets[part.id] != null;
     final isCorrect = submitted && _dropTargets[part.id] == part.id;
     final isWrong = submitted && _dropTargets[part.id] != null && _dropTargets[part.id] != part.id;
@@ -255,36 +329,19 @@ class _Level1ScreenState extends State<Level1Screen> {
       builder: (context, candidateData, rejectedData) {
         final isHovering = candidateData.isNotEmpty;
         return GestureDetector(
-          onTap: () {
-            if (!submitted && soundOn) {
-              setState(() => _highlightedPart = part.id);
-              Future.delayed(const Duration(milliseconds: 600), () {
-                if (mounted) setState(() => _highlightedPart = null);
-              });
-              ScaffoldMessenger.of(context).clearSnackBars();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(part.label, style: GoogleFonts.jua(fontSize: 14)),
-                  duration: const Duration(seconds: 1),
-                  backgroundColor: AppColors.primaryBlue,
-                ),
-              );
-            } else if (isFilled && !submitted) {
-              _removeLabelFromSlot(part.id);
-            }
-          },
+          onTap: isFilled && !submitted ? () => _removeLabelFromSlot(part.id) : null,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            width: w,
-            height: h,
+            width: boxW,
+            height: boxH,
             decoration: BoxDecoration(
               color: isCorrect
-                  ? Colors.green.withValues(alpha: 0.25)
+                  ? Colors.green.withValues(alpha: 0.2)
                   : isWrong
-                      ? Colors.red.withValues(alpha: 0.25)
+                      ? Colors.red.withValues(alpha: 0.2)
                       : isHovering
                           ? AppColors.primaryBlue.withValues(alpha: 0.15)
-                          : Colors.white.withValues(alpha: 0.85),
+                          : Colors.white,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
                 color: isCorrect
@@ -293,7 +350,7 @@ class _Level1ScreenState extends State<Level1Screen> {
                         ? Colors.red
                         : isFilled
                             ? AppColors.primaryBlue
-                            : AppColors.gray,
+                            : AppColors.gray.withValues(alpha: 0.6),
                 width: isFilled ? 2 : 1.5,
               ),
             ),
@@ -323,9 +380,9 @@ class _Level1ScreenState extends State<Level1Screen> {
                         ),
                     ],
                   )
-                : Center(
-                    child: Icon(Icons.drag_indicator, size: 14, color: AppColors.gray.withValues(alpha: 0.6)),
-                  ),
+                : Text(part.label,
+                    style: GoogleFonts.jua(fontSize: 10, color: AppColors.gray),
+                    textAlign: TextAlign.center),
           ),
         );
       },
@@ -393,7 +450,56 @@ class _Level1ScreenState extends State<Level1Screen> {
 class _BodyPart {
   final String id;
   final String label;
-  final double relX;
-  final double relY;
-  const _BodyPart(this.id, this.label, this.relX, this.relY);
+  final double markerX;
+  final double markerY;
+  final String side;
+  final double boxY;
+  const _BodyPart(this.id, this.label, this.markerX, this.markerY, this.side, this.boxY);
+}
+
+class _ArrowData {
+  final Offset from;
+  final Offset to;
+  const _ArrowData(this.from, this.to);
+}
+
+class _ArrowPainter extends CustomPainter {
+  final List<_ArrowData> arrows;
+  _ArrowPainter({required this.arrows});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.darkGray.withValues(alpha: 0.35)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    for (var arrow in arrows) {
+      canvas.drawLine(arrow.from, arrow.to, paint);
+
+      final dx = arrow.to.dx - arrow.from.dx;
+      final dy = arrow.to.dy - arrow.from.dy;
+      if (dx == 0 && dy == 0) continue;
+      final angle = math.atan2(dy, dx);
+      const arrowLen = 8.0;
+      const arrowAngle = 0.5;
+
+      final path = Path()
+        ..moveTo(arrow.to.dx, arrow.to.dy)
+        ..lineTo(
+          arrow.to.dx - arrowLen * math.cos(angle - arrowAngle),
+          arrow.to.dy - arrowLen * math.sin(angle - arrowAngle),
+        )
+        ..moveTo(arrow.to.dx, arrow.to.dy)
+        ..lineTo(
+          arrow.to.dx - arrowLen * math.cos(angle + arrowAngle),
+          arrow.to.dy - arrowLen * math.sin(angle + arrowAngle),
+        );
+
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ArrowPainter oldDelegate) => true;
 }
