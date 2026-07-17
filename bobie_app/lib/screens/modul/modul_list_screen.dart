@@ -61,6 +61,26 @@ class _ModulListScreenState extends State<ModulListScreen> {
               return;
             }
 
+            if (modul.id == '1' && level == 2) {
+              final result = await Navigator.pushNamed(
+                context,
+                '/level2',
+                arguments: widget.gender,
+              );
+              if (result is int) {
+                setState(() {
+                  final lvl = modul.levels.firstWhere((l) => l.number == level);
+                  if (result > lvl.stars) lvl.stars = result;
+                  lvl.isCompleted = true;
+                  final nextIndex = modul.levels.indexWhere((l) => l.number == level + 1);
+                  if (nextIndex != -1) {
+                    modul.levels[nextIndex].isUnlocked = true;
+                  }
+                });
+              }
+              return;
+            }
+
             final result = await Navigator.pushNamed(
               context,
               '/level-game',
