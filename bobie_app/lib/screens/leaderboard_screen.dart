@@ -12,15 +12,17 @@ class LeaderboardScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        toolbarHeight: 80,
         title: Text(
           'Papan Peringkat Sekolah',
           style: GoogleFonts.jua(
-            fontSize: 20,
+            fontSize: 26,
             fontWeight: FontWeight.w600,
             color: AppColors.darkBlue,
           ),
         ),
-        centerTitle: true,
       ),
       body: Column(
         children: [
@@ -79,11 +81,29 @@ class _PodiumSection extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          _PodiumItem(rank: 2, name: 'Siti', points: '850', height: 80, color: AppColors.gray),
+          _PodiumItem(
+            rank: 2,
+            name: 'Siti',
+            points: '850',
+            height: 80,
+            gradient: const RadialGradient(radius: 1.2, colors: [Color(0xFFF25A67), Color(0xFF8C343C)]),
+          ),
           const SizedBox(width: 12),
-          _PodiumItem(rank: 1, name: 'Ahmad', points: '920', height: 100, color: AppColors.orange),
+          _PodiumItem(
+            rank: 1,
+            name: 'Ahmad',
+            points: '920',
+            height: 100,
+            gradient: const RadialGradient(radius: 1.2, colors: [Color(0xFFFBE844), Color(0xFFF4900C)]),
+          ),
           const SizedBox(width: 12),
-          _PodiumItem(rank: 3, name: 'Dewi', points: '780', height: 60, color: const Color(0xFFCD7F32)),
+          _PodiumItem(
+            rank: 3,
+            name: 'Dewi',
+            points: '780',
+            height: 60,
+            gradient: const RadialGradient(radius: 1.2, colors: [Color(0xFF4FA8DF), Color(0xFF2B5B79)]),
+          ),
         ],
       ),
     );
@@ -95,14 +115,14 @@ class _PodiumItem extends StatelessWidget {
   final String name;
   final String points;
   final double height;
-  final Color color;
+  final RadialGradient gradient;
 
   const _PodiumItem({
     required this.rank,
     required this.name,
     required this.points,
     required this.height,
-    required this.color,
+    required this.gradient,
   });
 
   @override
@@ -114,7 +134,7 @@ class _PodiumItem extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: color,
+            color: gradient.colors[0],
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -123,7 +143,7 @@ class _PodiumItem extends StatelessWidget {
               style: GoogleFonts.jua(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: rank == 1 ? Colors.black : Colors.white,
               ),
             ),
           ),
@@ -142,7 +162,7 @@ class _PodiumItem extends StatelessWidget {
           width: 48,
           height: height,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.2),
+            gradient: gradient,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
           ),
         ),
@@ -158,7 +178,9 @@ class _CurrentUserCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.orange,
+        gradient: const LinearGradient(
+          colors: [Color(0xFF75D035), Color(0xFF3C6A1B)],
+        ),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -176,7 +198,7 @@ class _CurrentUserCard extends StatelessWidget {
                 style: GoogleFonts.jua(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.orange,
+                  color: const Color(0xFF3C6A1B),
                 ),
               ),
             ),
@@ -184,7 +206,7 @@ class _CurrentUserCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'You',
+              'Kamu',
               style: GoogleFonts.jua(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,

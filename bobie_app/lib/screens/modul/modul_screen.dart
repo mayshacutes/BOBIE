@@ -49,10 +49,13 @@ class _ModulScreenState extends State<ModulScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        toolbarHeight: 80,
         title: Text(
           'Modul Belajar',
           style: GoogleFonts.jua(
-            fontSize: 20,
+            fontSize: 26,
             fontWeight: FontWeight.w600,
             color: AppColors.darkBlue,
           ),
@@ -108,16 +111,17 @@ class _ModulCard extends StatelessWidget {
         children: [
           Stack(
             children: [
-              SizedBox(
+              Container(
                 width: 140,
                 height: 190,
-                child: Image.asset(
-                  modul.imageAsset,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    color: AppColors.lightSkyBlue,
-                    child: Center(
-                      child: Icon(Icons.landscape, size: 48, color: AppColors.gray),
+                color: AppColors.lightSkyBlue,
+                child: Center(
+                  child: Text(
+                    '${index + 1}',
+                    style: GoogleFonts.jua(
+                      fontSize: 48,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.gray,
                     ),
                   ),
                 ),
@@ -228,17 +232,17 @@ class _ModulCard extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
       );
     }
-    final emojis = ['\u{1F9CD}', '\u{1FA71}', '\u{1F91D}', '\u{1F6E1}\u{FE0F}'];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: List.generate(topics.length, (i) {
+        final emoji = modul.materiList[i].emoji;
         return Padding(
           padding: const EdgeInsets.only(bottom: 3),
           child: Row(
             children: [
               Text(
-                '${i < emojis.length ? emojis[i] : '\u{2022}'} ',
+                '$emoji ',
                 style: const TextStyle(fontSize: 12),
               ),
               Expanded(
@@ -248,8 +252,6 @@ class _ModulCard extends StatelessWidget {
                     fontSize: 11,
                     color: AppColors.darkGray,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

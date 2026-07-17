@@ -45,12 +45,13 @@ class _SignInScreenState extends State<SignInScreen> {
           Positioned(
             left: 0,
             right: 0,
-            bottom: 0,
-            height: 280,
+            bottom: -10,
+            height: 550,
             child: Image.asset(
               'assets/images/bg_signin.png',
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => const SizedBox(),
+              width: 100,
             ),
           ),
           SafeArea(
@@ -123,23 +124,34 @@ class _SignInScreenState extends State<SignInScreen> {
                         ),
                         const SizedBox(height: 8),
                         SizedBox(
-                          width: 200,
+                          width: 160,
                           height: 44,
                           child: ElevatedButton(
                             onPressed: _onMasuk,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryBlue,
+                              padding: EdgeInsets.zero,
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(22),
                               ),
                               elevation: 2,
                             ),
-                            child: Text(
-                              'Masuk',
-                              style: GoogleFonts.jua(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF4FA8DF), Color(0xFF2B5B79)],
+                                ),
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                'Masuk',
+                                style: GoogleFonts.jua(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme.dart';
-import '../../widgets/primary_button.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -18,7 +17,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
   bool _obscureKonfirmasi = true;
-  String _selectedGender = 'Laki-laki';
+  String? _selectedGender;
 
   @override
   void dispose() {
@@ -38,179 +37,211 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.skyBlue,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const SizedBox(height: 24),
-                Image.asset(
-                  'assets/images/logo_bobie.png',
-                  width: 160,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _LogoLetter('B', AppColors.logoPurple),
-                      _LogoLetter('O', AppColors.logoBlue),
-                      _LogoLetter('B', AppColors.logoPink),
-                      _LogoLetter('i', AppColors.logoYellow),
-                      _LogoLetter('e', AppColors.logoPurple),
-                    ],
-                  ),
+      body: Stack(
+        children: [
+          Container(color: const Color(0xFFA3DEFA)),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: -130,
+            height: 1200,
+            child: Transform.scale(
+              scale: 1.05,
+              child: Image.asset(
+                'assets/images/bg_signup.png',
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => const SizedBox(),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(32, 60, 32, 32),
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'Daftar Akun Siswa',
-                  style: GoogleFonts.jua(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.darkBlue,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                _InputField(
-                  controller: _nisController,
-                  hint: 'Nomor Induk Siswa',
-                  icon: Icons.badge_outlined,
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Nomor induk siswa tidak boleh kosong' : null,
-                ),
-                const SizedBox(height: 16),
-                _InputField(
-                  controller: _namaController,
-                  hint: 'Nama Siswa',
-                  icon: Icons.person_outline,
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Nama siswa tidak boleh kosong' : null,
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: AppColors.inputBg,
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.wc, color: AppColors.darkGray, size: 22),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Jenis Kelamin',
-                        style: GoogleFonts.jua(
-                          fontSize: 15,
-                          color: AppColors.gray,
-                        ),
-                      ),
-                      const Spacer(),
-                      DropdownButton<String>(
-                        value: _selectedGender,
-                        underline: const SizedBox(),
-                        style: GoogleFonts.jua(
-                          fontSize: 15,
-                          color: AppColors.black,
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: 'Laki-laki', child: Text('Laki-laki')),
-                          DropdownMenuItem(value: 'Perempuan', child: Text('Perempuan')),
-                        ],
-                        onChanged: (v) {
-                          if (v != null) setState(() => _selectedGender = v);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                _InputField(
-                  controller: _passwordController,
-                  hint: 'Kata Sandi',
-                  icon: Icons.lock_outline,
-                  obscureText: _obscurePassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                      color: AppColors.darkGray,
-                    ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                  ),
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Kata sandi tidak boleh kosong' : null,
-                ),
-                const SizedBox(height: 16),
-                _InputField(
-                  controller: _konfirmasiController,
-                  hint: 'Konfirmasi Kata Sandi',
-                  icon: Icons.lock_outline,
-                  obscureText: _obscureKonfirmasi,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureKonfirmasi ? Icons.visibility_off : Icons.visibility,
-                      color: AppColors.darkGray,
-                    ),
-                    onPressed: () =>
-                        setState(() => _obscureKonfirmasi = !_obscureKonfirmasi),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return 'Konfirmasi kata sandi tidak boleh kosong';
-                    if (v != _passwordController.text) return 'Kata sandi tidak cocok';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                PrimaryButton(
-                  text: 'Daftar',
-                  onPressed: _onDaftar,
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => Navigator.pushReplacementNamed(context, '/signin'),
-                  child: RichText(
-                    text: TextSpan(
-                      style: GoogleFonts.jua(fontSize: 14),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        TextSpan(
-                          text: 'Sudah punya akun? ',
-                          style: TextStyle(color: AppColors.darkGray),
+                        Image.asset(
+                          'assets/images/logo_bobie.png',
+                          width: 150,
+              fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) => Text(
+                            'BOBIe',
+                            style: GoogleFonts.jua(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primaryBlue,
+                            ),
+                          ),
                         ),
-                        TextSpan(
-                          text: 'Masuk di sini',
-                          style: TextStyle(
-                            color: AppColors.primaryBlue,
-                            fontWeight: FontWeight.w600,
+                        const SizedBox(height: 28),
+                        _InputField(
+                          controller: _nisController,
+                          hint: 'Nomor Induk Siswa',
+                          icon: Icons.badge_outlined,
+                          validator: (v) =>
+                              (v == null || v.isEmpty) ? 'Nomor induk siswa tidak boleh kosong' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        _InputField(
+                          controller: _namaController,
+                          hint: 'Nama Lengkap',
+                          icon: Icons.person_outline,
+                          validator: (v) =>
+                              (v == null || v.isEmpty) ? 'Nama lengkap tidak boleh kosong' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        _GenderDropdown(
+                          value: _selectedGender,
+                          onChanged: (v) {
+                            setState(() => _selectedGender = v);
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        _InputField(
+                          controller: _passwordController,
+                          hint: 'Kata Sandi',
+                          icon: Icons.lock_outline,
+                          obscureText: _obscurePassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              color: AppColors.darkGray,
+                            ),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
+                          validator: (v) =>
+                              (v == null || v.isEmpty) ? 'Kata sandi tidak boleh kosong' : null,
+                        ),
+                        const SizedBox(height: 16),
+                        _InputField(
+                          controller: _konfirmasiController,
+                          hint: 'Konfirmasi Kata Sandi',
+                          icon: Icons.lock_outline,
+                          obscureText: _obscureKonfirmasi,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureKonfirmasi ? Icons.visibility_off : Icons.visibility,
+                              color: AppColors.darkGray,
+                            ),
+                            onPressed: () =>
+                                setState(() => _obscureKonfirmasi = !_obscureKonfirmasi),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return 'Konfirmasi kata sandi tidak boleh kosong';
+                            if (v != _passwordController.text) return 'Kata sandi tidak cocok';
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: 160,
+                          height: 44,
+                          child: ElevatedButton(
+                            onPressed: _onDaftar,
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              elevation: 2,
+                            ),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF4FA8DF), Color(0xFF2B5B79)],
+                                ),
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                'Daftar',
+                                style: GoogleFonts.jua(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: () => Navigator.pushReplacementNamed(context, '/signin'),
+                          child: RichText(
+                            text: TextSpan(
+                              style: GoogleFonts.jua(fontSize: 13),
+                              children: [
+                                TextSpan(
+                                  text: 'Sudah memiliki akun? ',
+                                  style: TextStyle(color: AppColors.darkGray),
+                                ),
+                                TextSpan(
+                                  text: 'Masuk',
+                                  style: TextStyle(
+                                    color: const Color(0xFFF4900C),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 32),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-class _LogoLetter extends StatelessWidget {
-  final String letter;
-  final Color color;
+class _GenderDropdown extends StatelessWidget {
+  final String? value;
+  final ValueChanged<String?> onChanged;
 
-  const _LogoLetter(this.letter, this.color);
+  const _GenderDropdown({required this.value, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      letter,
-      style: GoogleFonts.jua(
-        fontSize: 36,
-        fontWeight: FontWeight.bold,
-        color: color,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.inputBg,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        isExpanded: true,
+        hint: Text(
+          'Jenis Kelamin',
+          style: GoogleFonts.jua(fontSize: 14, color: AppColors.gray),
+        ),
+        decoration: const InputDecoration(
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          prefixIcon: Icon(Icons.wc, color: AppColors.darkGray, size: 20),
+        ),
+        icon: const Icon(Icons.arrow_drop_down, color: AppColors.darkGray),
+        style: GoogleFonts.jua(fontSize: 14, color: AppColors.black),
+        items: const [
+          DropdownMenuItem(value: 'Laki-laki', child: Text('Laki-laki')),
+          DropdownMenuItem(value: 'Perempuan', child: Text('Perempuan')),
+        ],
+        onChanged: onChanged,
       ),
     );
   }
@@ -239,19 +270,19 @@ class _InputField extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       validator: validator,
-      style: GoogleFonts.jua(fontSize: 15, color: AppColors.black),
+      style: GoogleFonts.jua(fontSize: 14, color: AppColors.black),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: GoogleFonts.jua(fontSize: 15, color: AppColors.gray),
-        prefixIcon: Icon(icon, color: AppColors.darkGray, size: 22),
+        hintStyle: GoogleFonts.jua(fontSize: 14, color: AppColors.gray),
+        prefixIcon: Icon(icon, color: AppColors.darkGray, size: 20),
         suffixIcon: suffixIcon,
         filled: true,
         fillColor: AppColors.inputBg,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }

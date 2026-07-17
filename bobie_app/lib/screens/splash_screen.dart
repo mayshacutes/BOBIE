@@ -30,13 +30,11 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 1600),
     );
 
-    // Wipe reveal left -> right (0 to 1 = hidden to fully shown)
     _revealWidth = CurvedAnimation(
       parent: _logoController,
       curve: const Interval(0.0, 0.65, curve: Curves.easeOutCubic),
     );
 
-    // Gentle bounce once fully revealed
     _logoScale = TweenSequence<double>([
       TweenSequenceItem(
         tween: Tween(begin: 0.85, end: 1.08)
@@ -65,7 +63,6 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 900),
     )..repeat();
 
-    // Pulsing glow behind the logo, loops forever
     _glowController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1800),
