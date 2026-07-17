@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'theme.dart';
+import 'models/app_user.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/auth/sign_up_screen.dart';
@@ -8,6 +9,7 @@ import 'screens/modul/modul_screen.dart';
 import 'screens/modul/materi_screen.dart';
 import 'screens/modul/kuis_screen.dart';
 import 'screens/modul/level_complete_screen.dart';
+import 'screens/modul/games/level1_screen.dart';
 import 'screens/leaderboard_screen.dart';
 import 'screens/profile_screen.dart';
 import 'widgets/bottom_nav_bar.dart';
@@ -35,17 +37,18 @@ class BobieApp extends StatelessWidget {
           case '/signup':
             return _buildPageRoute(const SignUpScreen(), settings);
           case '/main':
-            final studentName = settings.arguments as String? ?? 'Siswa';
-            return _buildPageRoute(
-              _MainShell(studentName: studentName),
-              settings,
-            );
+            final user = settings.arguments as AppUser? ??
+                const AppUser(nis: '-', password: '-', name: 'Siswa', gender: MascotGender.boy);
+            return _buildPageRoute(_MainShell(user: user), settings);
           case '/materi':
             return _buildPageRoute(const MateriScreen(), settings);
           case '/kuis':
             return _buildPageRoute(const KuisScreen(), settings);
           case '/level-complete':
             return _buildPageRoute(const LevelCompleteScreen(), settings);
+          case '/level1':
+            final gender = settings.arguments as MascotGender? ?? MascotGender.boy;
+            return _buildPageRoute(Level1Screen(gender: gender), settings);
           case '/leaderboard':
             return _buildPageRoute(const LeaderboardScreen(), settings);
           case '/profile':
@@ -71,9 +74,9 @@ class BobieApp extends StatelessWidget {
 }
 
 class _MainShell extends StatefulWidget {
-  final String studentName;
+  final AppUser user;
 
-  const _MainShell({required this.studentName});
+  const _MainShell({required this.user});
 
   @override
   State<_MainShell> createState() => _MainShellState();
@@ -85,10 +88,10 @@ class _MainShellState extends State<_MainShell> {
   @override
   Widget build(BuildContext context) {
     final screens = [
-      const ModulListScreen(),
+      ModulListScreen(gender: widget.user.gender),
       const ModulScreen(),
       const LeaderboardScreen(),
-      ProfileScreen(studentName: widget.studentName),
+      ProfileScreen(studentName: widget.user.name),
     ];
 
     return Scaffold(

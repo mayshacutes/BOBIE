@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme.dart';
+import '../../models/app_user.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -24,11 +25,14 @@ class _SignInScreenState extends State<SignInScreen> {
 
   void _onMasuk() {
     if (_formKey.currentState?.validate() ?? false) {
-      Navigator.pushReplacementNamed(
-        context,
-        '/main',
-        arguments: _nisController.text,
-      );
+      final user = findUser(_nisController.text.trim(), _passwordController.text);
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('NIS atau kata sandi salah')),
+        );
+        return;
+      }
+      Navigator.pushReplacementNamed(context, '/main', arguments: user);
     }
   }
 

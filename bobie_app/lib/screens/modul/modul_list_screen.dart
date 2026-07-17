@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../theme.dart';
 import '../../models/modul.dart';
+import '../../models/app_user.dart';
+import '../../models/level_progress.dart';
+import 'island_detail_dialog.dart';
 
 class ModulListScreen extends StatefulWidget {
-  const ModulListScreen({super.key});
+  final MascotGender gender;
+
+  const ModulListScreen({super.key, required this.gender});
 
   @override
   State<ModulListScreen> createState() => _ModulListScreenState();
@@ -19,6 +24,23 @@ class _ModulListScreenState extends State<ModulListScreen> {
   }
 
   void _openModul(Modul modul) {
+    showIslandDetailDialog(
+      context: context,
+      modul: modul,
+      onLevelTap: (levelNumber) => _openLevel(modul, levelNumber),
+    );
+  }
+
+  Future<void> _openLevel(Modul modul, int levelNumber) async {
+    if (modul.id == '1' && levelNumber == 1) {
+      final result = await Navigator.pushNamed(context, '/level1', arguments: widget.gender);
+      if (result is int) {
+        LevelProgress.setStars(modul.id, levelNumber, result);
+        setState(() {});
+      }
+      return;
+    }
+
     Navigator.pushNamed(
       context,
       '/materi',
