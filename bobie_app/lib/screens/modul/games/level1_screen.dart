@@ -191,7 +191,7 @@ class _Level1ScreenState extends State<Level1Screen> {
   Widget _buildSectionA() {
     return Column(
       children: [
-        _buildTopBar(soundOffset: 50),
+        _buildTopBar(),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text('Halo, Tubuhku!',
@@ -225,7 +225,7 @@ class _Level1ScreenState extends State<Level1Screen> {
                           for (var part in _bodyParts)
                             Positioned(
                               left: cw * part.markerX - 12,
-                              top: ch * part.markerY - 12,
+                              top: ch * part.markerY - 12 + 50,
                               child: GestureDetector(
                                 onTap: () {
                                   setState(() => _tappedInA.add(part.id));
@@ -338,7 +338,7 @@ class _Level1ScreenState extends State<Level1Screen> {
 
   // ─────────────────────── SHARED WIDGETS ───────────────────────
 
-  Widget _buildTopBar({double soundOffset = 0}) {
+  Widget _buildTopBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 6),
       child: Row(
@@ -366,13 +366,10 @@ class _Level1ScreenState extends State<Level1Screen> {
             },
           ),
           const SizedBox(width: 4),
-          Container(
-            margin: EdgeInsets.only(top: soundOffset),
-            child: _CircleButton(
+          _CircleButton(
             icon: soundOn ? Icons.volume_up : Icons.volume_off,
             gradient: const [Color(0xFFE87E45), Color(0xFFA64410)],
             onPressed: () => setState(() => soundOn = !soundOn),
-          ),
           ),
         ],
       ),
