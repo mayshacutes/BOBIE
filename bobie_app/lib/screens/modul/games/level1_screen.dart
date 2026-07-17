@@ -191,7 +191,13 @@ class _Level1ScreenState extends State<Level1Screen> {
   Widget _buildSectionA() {
     return Column(
       children: [
-        _buildTopBar('Halo, Tubuhku!'),
+        _buildTopBar(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text('Halo, Tubuhku!',
+              style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.black),
+              textAlign: TextAlign.center),
+        ),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -290,7 +296,13 @@ class _Level1ScreenState extends State<Level1Screen> {
   Widget _buildSectionB() {
     return Column(
       children: [
-        _buildTopBar('Apa saja bagian tubuhku?'),
+        _buildTopBar(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text('Apa saja bagian tubuhku?',
+              style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.black),
+              textAlign: TextAlign.center),
+        ),
         Expanded(
           child: SingleChildScrollView(
             child: Padding(
@@ -326,7 +338,7 @@ class _Level1ScreenState extends State<Level1Screen> {
 
   // ─────────────────────── SHARED WIDGETS ───────────────────────
 
-  Widget _buildTopBar(String title) {
+  Widget _buildTopBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 16, 12, 6),
       child: Row(
@@ -337,10 +349,8 @@ class _Level1ScreenState extends State<Level1Screen> {
             onPressed: () => Navigator.pop(context),
           ),
           const SizedBox(width: 8),
-          Expanded(
-            child: Text(title,
-                style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.black)),
-          ),
+          Text('Level 1',
+              style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.black)),
           const Spacer(),
           _CircleButton(
             icon: Icons.replay,
