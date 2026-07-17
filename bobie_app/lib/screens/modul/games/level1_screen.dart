@@ -223,9 +223,6 @@ class _Level1ScreenState extends State<Level1Screen> {
 
         const boxW = 68.0;
         const boxH = 28.0;
-
-        const boxW = 68.0;
-        const boxH = 28.0;
         final leftBoxRight = 24.0 + boxW;
         final rightBoxLeft = W - 24.0 - boxW;
 
