@@ -189,7 +189,7 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
 
   Widget _buildTopBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.fromLTRB(12, 16, 12, 6),
       child: Row(
         children: [
           _CircleButton(
