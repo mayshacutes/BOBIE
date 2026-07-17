@@ -9,11 +9,26 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fadeAnimation;
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(const Duration(seconds: 2), () {
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3000),
+    );
+    _fadeAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0), weight: 20),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.0), weight: 60),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 20),
+    ]).animate(_controller);
+    _controller.forward();
+
+    Future.delayed(const Duration(milliseconds: 3000), () {
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/signin');
       }
@@ -21,37 +36,38 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/images/logo_bobie.png',
-              width: 200,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _Letter('B', AppColors.logoPurple),
-                  _Letter('O', AppColors.logoBlue),
-                  _Letter('B', AppColors.logoPink),
-                  _Letter('i', AppColors.logoYellow),
-                  _Letter('e', AppColors.logoPurple),
-                ],
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/images/logo_bobie.png',
+                width: 200,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _Letter('B', AppColors.logoPurple),
+                    _Letter('O', AppColors.logoBlue),
+                    _Letter('B', AppColors.logoPink),
+                    _Letter('i', AppColors.logoYellow),
+                    _Letter('e', AppColors.logoPurple),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Pembelajaran Seksualitas Ramah Anak',
-              style: GoogleFonts.jua(
-                fontSize: 14,
-                color: AppColors.darkGray,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

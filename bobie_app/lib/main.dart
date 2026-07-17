@@ -8,6 +8,7 @@ import 'screens/modul/modul_screen.dart';
 import 'screens/modul/materi_screen.dart';
 import 'screens/modul/kuis_screen.dart';
 import 'screens/modul/level_complete_screen.dart';
+import 'screens/modul/level_game_screen.dart';
 import 'screens/leaderboard_screen.dart';
 import 'screens/profile_screen.dart';
 import 'widgets/bottom_nav_bar.dart';
@@ -44,6 +45,8 @@ class BobieApp extends StatelessWidget {
             return _buildPageRoute(const MateriScreen(), settings);
           case '/kuis':
             return _buildPageRoute(const KuisScreen(), settings);
+          case '/level-game':
+            return _buildPageRoute(const LevelGameScreen(), settings);
           case '/level-complete':
             return _buildPageRoute(const LevelCompleteScreen(), settings);
           case '/leaderboard':
