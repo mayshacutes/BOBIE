@@ -225,7 +225,7 @@ class _Level1ScreenState extends State<Level1Screen> {
                           for (var part in _bodyParts)
                             Positioned(
                               left: cw * part.markerX - 12,
-                              top: ch * part.markerY - 12 + 50,
+                              top: ch * part.markerY - 12 + 100,
                               child: GestureDetector(
                                 onTap: () {
                                   setState(() => _tappedInA.add(part.id));
