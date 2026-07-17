@@ -145,6 +145,7 @@ class _Level1ScreenState extends State<Level1Screen> {
                       Navigator.pop(ctx);
                       Navigator.pop(context, stars);
                     },
+                  ),
                 ],
               ),
             ],
