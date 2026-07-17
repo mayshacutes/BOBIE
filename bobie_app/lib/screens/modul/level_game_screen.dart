@@ -53,12 +53,6 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
       }
       _dropTargets[partId] = labelId;
       _availableLabels.remove(labelId);
-      for (var entry in _dropTargets.entries) {
-        if (entry.value != null && entry.value != entry.key && !_availableLabels.contains(entry.value)) {
-          _availableLabels.insert(0, entry.value!);
-          _dropTargets[entry.key] = null;
-        }
-      }
     });
   }
 
@@ -91,51 +85,99 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
 
   void _showCompletionDialog(int correct) {
     int stars = correct >= 6 ? 3 : (correct >= 4 ? 2 : 1);
-    int xp = correct * 10;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('SELESAI!',
-                  style: GoogleFonts.jua(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.orange)),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(3, (i) => Icon(
-                    i < stars ? Icons.star : Icons.star_border,
-                    color: const Color(0xFFF25A67),
-                    size: 36)),
-              ),
+              Text('SELAMAT!',
+                  style: GoogleFonts.jua(fontSize: 28, fontWeight: FontWeight.bold, color: const Color(0xFF489015))),
               const SizedBox(height: 8),
-              Text('$xp XP',
-                  style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    Navigator.pushReplacementNamed(context, '/main', arguments: '');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.green,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+              Text('kamu sudah menyelesaikan',
+                  style: GoogleFonts.jua(fontSize: 14, color: AppColors.darkGray)),
+              Text('level ${_level.number}',
+                  style: GoogleFonts.jua(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.black)),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildResultButton(
+                    icon: Icons.home,
+                    gradient: const [Color(0xFF75D035), Color(0xFF388105)],
+                    label: 'Kembali',
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      Navigator.pop(context);
+                    },
                   ),
-                  child: Text('Kembali',
-                      style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
-                ),
+                  _buildResultButton(
+                    icon: Icons.replay,
+                    gradient: const [Color(0xFFEAAA0A), Color(0xFF9A7413)],
+                    label: 'Ulangi',
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      setState(() {
+                        showResult = false;
+                        _dropTargets = {for (var p in _bodyParts) p.id: null};
+                        _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
+                      });
+                    },
+                  ),
+                  _buildResultButton(
+                    icon: Icons.arrow_forward,
+                    gradient: const [Color(0xFF4FA8DF), Color(0xFF2B5B79)],
+                    label: 'Lanjut',
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      Navigator.pushReplacementNamed(context, '/main', arguments: '');
+                    },
+                  ),
+                ],
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildResultButton({
+    required IconData icon,
+    required List<Color> gradient,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: gradient),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: gradient.last.withValues(alpha: 0.3),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Icon(icon, color: Colors.white, size: 22),
+          ),
+          const SizedBox(height: 4),
+          Text(label,
+              style: GoogleFonts.jua(fontSize: 11, fontWeight: FontWeight.w600, color: gradient.first)),
+        ],
       ),
     );
   }
