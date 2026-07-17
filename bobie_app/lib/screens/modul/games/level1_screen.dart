@@ -99,13 +99,17 @@ class _Level1ScreenState extends State<Level1Screen> {
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.star_rounded, color: const Color(0xFFFDD52E), size: 32),
-                  const SizedBox(width: 2),
-                  Icon(Icons.star_rounded, color: const Color(0xFFFDD52E), size: 44),
-                  const SizedBox(width: 2),
-                  Icon(Icons.star_rounded, color: const Color(0xFFFDD52E), size: 32),
-                ],
+                children: List.generate(3, (i) {
+                  final size = i == 1 ? 44.0 : 32.0;
+                  return Padding(
+                    padding: EdgeInsets.only(left: i > 0 ? 2 : 0),
+                    child: Icon(
+                      i < stars ? Icons.star_rounded : Icons.star_border_rounded,
+                      color: const Color(0xFFFDD52E),
+                      size: size,
+                    ),
+                  );
+                }),
               ),
               const SizedBox(height: 4),
               Text('+${correct * 10} XP',
@@ -137,8 +141,10 @@ class _Level1ScreenState extends State<Level1Screen> {
                     icon: Icons.arrow_forward,
                     gradient: const [Color(0xFF4FA8DF), Color(0xFF2B5B79)],
                     label: 'Lanjut',
-                    onPressed: () => Navigator.pop(ctx, stars),
-                  ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      Navigator.pop(context, stars);
+                    },
                 ],
               ),
             ],

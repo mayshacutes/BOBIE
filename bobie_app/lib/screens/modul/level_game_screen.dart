@@ -106,13 +106,17 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.star_rounded, color: const Color(0xFFFDD52E), size: 32),
-                  const SizedBox(width: 2),
-                  Icon(Icons.star_rounded, color: const Color(0xFFFDD52E), size: 44),
-                  const SizedBox(width: 2),
-                  Icon(Icons.star_rounded, color: const Color(0xFFFDD52E), size: 32),
-                ],
+                children: List.generate(3, (i) {
+                  final size = i == 1 ? 44.0 : 32.0;
+                  return Padding(
+                    padding: EdgeInsets.only(left: i > 0 ? 2 : 0),
+                    child: Icon(
+                      i < stars ? Icons.star_rounded : Icons.star_border_rounded,
+                      color: const Color(0xFFFDD52E),
+                      size: size,
+                    ),
+                  );
+                }),
               ),
               const SizedBox(height: 4),
               Text('+${correct * 10} XP',
@@ -149,7 +153,7 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
                     label: 'Lanjut',
                     onPressed: () {
                       Navigator.pop(ctx);
-                      Navigator.pushReplacementNamed(context, '/main', arguments: '');
+                      Navigator.pop(context, stars);
                     },
                   ),
                 ],

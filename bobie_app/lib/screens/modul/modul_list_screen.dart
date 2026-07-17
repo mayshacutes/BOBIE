@@ -49,10 +49,10 @@ class _ModulListScreenState extends State<ModulListScreen> {
               );
               if (result is int) {
                 setState(() {
-                  final lvl = modul.levels.firstWhere((l) => l.number == 1);
+                  final lvl = modul.levels.firstWhere((l) => l.number == level);
                   if (result > lvl.stars) lvl.stars = result;
                   lvl.isCompleted = true;
-                  final nextIndex = modul.levels.indexWhere((l) => l.number == 2);
+                  final nextIndex = modul.levels.indexWhere((l) => l.number == level + 1);
                   if (nextIndex != -1) {
                     modul.levels[nextIndex].isUnlocked = true;
                   }
@@ -61,11 +61,22 @@ class _ModulListScreenState extends State<ModulListScreen> {
               return;
             }
 
-            Navigator.pushNamed(
+            final result = await Navigator.pushNamed(
               context,
               '/level-game',
               arguments: {'modulId': modul.id, 'moduls': _moduls, 'level': level},
             );
+            if (result is int) {
+              setState(() {
+                final lvl = modul.levels.firstWhere((l) => l.number == level);
+                if (result > lvl.stars) lvl.stars = result;
+                lvl.isCompleted = true;
+                final nextIndex = modul.levels.indexWhere((l) => l.number == level + 1);
+                if (nextIndex != -1) {
+                  modul.levels[nextIndex].isUnlocked = true;
+                }
+              });
+            }
           },
         ),
       ),
