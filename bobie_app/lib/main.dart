@@ -54,8 +54,7 @@ class BobieApp extends StatelessWidget {
             final gender = settings.arguments as MascotGender? ?? MascotGender.boy;
             return _buildPageRoute(Level1Screen(gender: gender), settings);
           case '/level2':
-            final gender = settings.arguments as MascotGender? ?? MascotGender.boy;
-            return _buildPageRoute(Level2Screen(gender: gender), settings);
+            return _buildPageRoute(const Level2Screen(), settings);
           case '/leaderboard':
             return _buildPageRoute(const LeaderboardScreen(), settings);
           case '/profile':
