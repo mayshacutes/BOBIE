@@ -13,24 +13,22 @@ class _Level3ScreenState extends State<Level3Screen> {
   bool soundOn = true;
 
   final List<_Activity> _activities = [
-    _Activity('olahraga', '🏃', 'Olahraga', true),
-    _Activity('makan_sayur', '🥗', 'Makan Sayur', true),
-    _Activity('mandi', '🛁', 'Mandi', true),
-    _Activity('tidur_awal', '😴', 'Tidur Awal', true),
-    _Activity('minum_air', '💧', 'Minum Air Putih', true),
-    _Activity('main_game', '🎮', 'Main Game Terus', false),
-    _Activity('begadang', '🌙', 'Begadang', false),
-    _Activity('jajan_sembarangan', '🍭', 'Jajan Sembarangan', false),
-    _Activity('main_hp', '📱', 'Main HP Terus', false),
-    _Activity('makan_permen', '🍬', 'Makan Permen', false),
+    _Activity('olahraga', '🏃', 'Olahraga', true, 'Olahraga membuat tubuh sehat, kuat, dan tidak mudah sakit.'),
+    _Activity('makan_sayur', '🥗', 'Makan Sayur', true, 'Sayur mengandung vitamin yang baik untuk kesehatan tubuh.'),
+    _Activity('mandi', '🛁', 'Mandi', true, 'Mandi menjaga kebersihan tubuh agar terhindar dari kuman.'),
+    _Activity('tidur_awal', '😴', 'Tidur Awal', true, 'Tidur awal membuat tubuh segar dan siap belajar esok hari.'),
+    _Activity('minum_air', '💧', 'Minum Air Putih', true, 'Air putih menjaga tubuh tetap terhidrasi dan lancar beraktivitas.'),
+    _Activity('main_game', '🎮', 'Main Game Terus', false, 'Terlalu lama main game membuat mata lelah dan lupa waktu belajar.'),
+    _Activity('begadang', '🌙', 'Begadang', false, 'Begadang membuat tubuh lemas, mudah sakit, dan sulit konsentrasi.'),
+    _Activity('jajan_sembarangan', '🍭', 'Jajan Sembarangan', false, 'Jajan sembarangan bisa menyebabkan sakit perut dan tidak higienis.'),
+    _Activity('main_hp', '📱', 'Main HP Terus', false, 'Terlalu lama main HP bisa merusak mata dan membuat malas bergerak.'),
+    _Activity('makan_permen', '🍬', 'Makan Permen', false, 'Terlalu banyak makan permen bisa merusak gigi dan menyebabkan diabetes.'),
   ];
 
   late List<int> _shuffledIndices;
   int _currentIndex = 0;
   int _correctCount = 0;
   bool _showResult = false;
-  String _resultMessage = '';
-  bool? _lastCorrect;
   bool _isFlipped = false;
 
   @override
@@ -45,8 +43,6 @@ class _Level3ScreenState extends State<Level3Screen> {
       _currentIndex = 0;
       _correctCount = 0;
       _showResult = false;
-      _resultMessage = '';
-      _lastCorrect = null;
       _isFlipped = false;
     });
   }
@@ -64,13 +60,109 @@ class _Level3ScreenState extends State<Level3Screen> {
 
     if (correct) {
       _correctCount++;
-      _resultMessage = 'Hebat! ${activity.name} termasuk kegiatan yang ${isGood ? "BAIK" : "BURUK"} untuk tubuh!';
-    } else {
-      _resultMessage = 'Yah kurang tepat! ${activity.name} sebenarnya kegiatan yang ${!isGood ? "BAIK" : "BURUK"} untuk tubuh.';
     }
-    _lastCorrect = correct;
 
     setState(() => _showResult = true);
+    _showInsign(activity, correct);
+  }
+
+  void _showInsign(_Activity activity, bool correct) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: correct ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  correct ? Icons.check_circle : Icons.cancel,
+                  color: correct ? Colors.green : Colors.red,
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                correct ? 'Tepat Sekali!' : 'Kurang Tepat',
+                style: GoogleFonts.jua(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: correct ? Colors.green.shade700 : Colors.red.shade700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(activity.emoji, style: const TextStyle(fontSize: 40)),
+              const SizedBox(height: 6),
+              Text(
+                activity.name,
+                style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.black),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (activity.isGood ? Colors.green : Colors.red).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  activity.isGood ? 'Kegiatan BAIK' : 'Kegiatan BURUK',
+                  style: GoogleFonts.jua(
+                    fontSize: 12,
+                    color: activity.isGood ? Colors.green.shade700 : Colors.red.shade700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppColors.skyBlue,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  activity.reason,
+                  style: GoogleFonts.jua(fontSize: 13, color: AppColors.darkBlue, height: 1.4),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 46,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _nextCard();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4FA8DF),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(23)),
+                  ),
+                  child: Text(
+                    _currentIndex >= _activities.length - 1 ? 'Selesai' : 'Lanjut',
+                    style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _nextCard() {
@@ -82,8 +174,6 @@ class _Level3ScreenState extends State<Level3Screen> {
       _currentIndex++;
       _isFlipped = false;
       _showResult = false;
-      _resultMessage = '';
-      _lastCorrect = null;
     });
   }
 
@@ -245,7 +335,7 @@ class _Level3ScreenState extends State<Level3Screen> {
 
   Widget _buildInstruction() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.fromLTRB(16, 44, 16, 4),
       child: Text('Balik dan masukkan kartunya',
           style: GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.black),
           textAlign: TextAlign.center),
@@ -258,71 +348,51 @@ class _Level3ScreenState extends State<Level3Screen> {
     final activity = _activities[idx];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Column(
         children: [
           Text('${_currentIndex + 1} / ${_activities.length}',
               style: GoogleFonts.jua(fontSize: 14, color: AppColors.darkGray)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Expanded(
-            child: Row(
-              children: [
-                Expanded(child: _buildBasket(false)),
-                Expanded(flex: 2, child: Center(child: _buildCard(activity))),
-                Expanded(child: _buildBasket(true)),
-              ],
+            flex: 3,
+            child: Transform.translate(
+              offset: const Offset(0, -20),
+              child: Center(child: _buildCard(activity)),
             ),
           ),
-          if (_showResult) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              decoration: BoxDecoration(
-                color: _lastCorrect == true
-                    ? Colors.green.withValues(alpha: 0.1)
-                    : Colors.red.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: _lastCorrect == true ? Colors.green : Colors.red,
+          const SizedBox(height: 4),
+          Transform.translate(
+            offset: const Offset(0, -70),
+            child: Expanded(
+              flex: 3,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    Expanded(child: _buildBobBeepImage(false)),
+                    const SizedBox(width: 8),
+                    Expanded(child: _buildBobBeepImage(true)),
+                  ],
                 ),
               ),
+            ),
+          ),
+          Transform.translate(
+            offset: const Offset(0, -70),
+            child: SizedBox(
+              height: 48,
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    _lastCorrect == true ? Icons.check_circle : Icons.cancel,
-                    color: _lastCorrect == true ? Colors.green : Colors.red,
-                    size: 20,
-                  ),
+                  const SizedBox(width: 4),
+                  Expanded(child: _buildBasket(false)),
                   const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(_resultMessage,
-                        style: GoogleFonts.jua(
-                          fontSize: 13,
-                          color: _lastCorrect == true ? Colors.green.shade700 : Colors.red.shade700,
-                        )),
-                  ),
+                  Expanded(child: _buildBasket(true)),
+                  const SizedBox(width: 4),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: 180,
-              height: 44,
-              child: ElevatedButton(
-                onPressed: _nextCard,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4FA8DF),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-                ),
-                child: Text(
-                  _currentIndex >= _activities.length - 1 ? 'Selesai' : 'Lanjut',
-                  style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
+          ),
         ],
       ),
     );
@@ -357,17 +427,17 @@ class _Level3ScreenState extends State<Level3Screen> {
     const cardH = 190.0;
     return Stack(
       children: [
-        for (int i = 2; i >= 1; i--)
+        for (int i = 4; i >= 1; i--)
           Positioned(
-            left: i * 3.0,
-            top: i * 3.0,
+            left: i * 5.0,
+            top: i * 5.0,
             child: Container(
               width: cardW,
               height: cardH,
               decoration: BoxDecoration(
-                color: Color.lerp(const Color(0xFF4FA8DF), Colors.white, i / 3)!,
+                color: Color.lerp(const Color(0xFF4FA8DF), Colors.white, i / 5)!,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF1A3D5E).withValues(alpha: 0.3), width: 2),
+                border: Border.all(color: const Color(0xFF1A3D5E).withValues(alpha: 0.25), width: 1.5),
               ),
             ),
           ),
@@ -488,23 +558,8 @@ class _Level3ScreenState extends State<Level3Screen> {
               style: GoogleFonts.jua(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.black),
               textAlign: TextAlign.center),
         ),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-          decoration: BoxDecoration(
-            color: activity.isGood ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            activity.isGood ? 'Seret ke BAIK' : 'Seret ke BURUK',
-            style: GoogleFonts.jua(
-              fontSize: 10,
-              color: activity.isGood ? Colors.green.shade700 : Colors.red.shade700,
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Icon(Icons.swipe, size: 18, color: AppColors.gray),
+        const SizedBox(height: 12),
+        Icon(Icons.swipe, size: 22, color: AppColors.gray),
       ],
     );
   }
@@ -513,46 +568,50 @@ class _Level3ScreenState extends State<Level3Screen> {
     final label = isGood ? 'BAIK' : 'BURUK';
     final color = isGood ? Colors.green : Colors.red;
 
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gray.withValues(alpha: 0.3), width: 2),
+      ),
+      child: Center(
+        child: Text(label,
+            style: GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.bold, color: color)),
+      ),
+    );
+  }
+
+  Widget _buildBobBeepImage(bool isGood) {
     return DragTarget<_Activity>(
       onAcceptWithDetails: (details) => _dropToBasket(isGood),
       builder: (context, candidateData, rejectedData) {
         final isHovering = candidateData.isNotEmpty;
         return AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          margin: const EdgeInsets.symmetric(horizontal: 4),
           decoration: BoxDecoration(
             color: isHovering
-                ? color.withValues(alpha: 0.15)
-                : Colors.grey.shade50,
+                ? (isGood ? Colors.green : Colors.red).withValues(alpha: 0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isHovering ? color : AppColors.gray.withValues(alpha: 0.3),
-              width: isHovering ? 3 : 2,
+              color: isHovering
+                  ? (isGood ? Colors.green : Colors.red)
+                  : Colors.transparent,
+              width: 3,
             ),
-            boxShadow: isHovering
-                ? [BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 12)]
-                : null,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset(
-                isGood ? 'assets/images/bob_cart.png' : 'assets/images/beep_cart.png',
-                width: 50,
-                height: 50,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Icon(
-                  isGood ? Icons.thumb_up_alt_rounded : Icons.thumb_down_alt_rounded,
-                  size: 36,
-                  color: color,
-                ),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Image.asset(
+              isGood ? 'assets/images/bob_cart.png' : 'assets/images/beep_cart.png',
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Icon(
+                isGood ? Icons.thumb_up_alt_rounded : Icons.thumb_down_alt_rounded,
+                size: 80,
+                color: isGood ? Colors.green : Colors.red,
               ),
-              const SizedBox(height: 6),
-              Text(label,
-                  style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.bold, color: color)),
-              Text('Letakkan di sini',
-                  style: GoogleFonts.jua(fontSize: 9, color: AppColors.gray)),
-            ],
+            ),
           ),
         );
       },
@@ -565,8 +624,9 @@ class _Activity {
   final String emoji;
   final String name;
   final bool isGood;
+  final String reason;
 
-  const _Activity(this.id, this.emoji, this.name, this.isGood);
+  const _Activity(this.id, this.emoji, this.name, this.isGood, this.reason);
 }
 
 class _CircleButton extends StatelessWidget {

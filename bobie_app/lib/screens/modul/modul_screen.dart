@@ -114,14 +114,22 @@ class _ModulCard extends StatelessWidget {
               Container(
                 width: 140,
                 height: 190,
-                color: AppColors.lightSkyBlue,
-                child: Center(
-                  child: Text(
-                    '${index + 1}',
-                    style: GoogleFonts.jua(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.gray,
+                decoration: BoxDecoration(
+                  color: AppColors.lightSkyBlue,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Image.asset(
+                  'assets/images/Modul${index + 1}.PNG',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Center(
+                    child: Text(
+                      '${index + 1}',
+                      style: GoogleFonts.jua(
+                        fontSize: 48,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.gray,
+                      ),
                     ),
                   ),
                 ),
@@ -129,7 +137,10 @@ class _ModulCard extends StatelessWidget {
               if (isLocked)
                 Positioned.fill(
                   child: Container(
-                    color: Colors.black.withValues(alpha: 0.4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: const Center(
                       child: Icon(Icons.lock, color: Colors.white, size: 32),
                     ),

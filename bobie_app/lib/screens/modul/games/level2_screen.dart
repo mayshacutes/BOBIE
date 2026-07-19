@@ -15,8 +15,10 @@ class _Level2ScreenState extends State<Level2Screen> {
   bool soundOn = true;
   _L2Phase _phase = _L2Phase.sectionA;
   int _currentPartIndex = 0;
-  bool _paperBobClicked = false;
-  bool _paperBeepClicked = false;
+  bool _bobOrganClicked = false;
+  bool _bobFuncClicked = false;
+  bool _beepOrganClicked = false;
+  bool _beepFuncClicked = false;
 
   final List<_Part> _parts = [
     _Part('mata', 'Mata', '👁️', 'untuk melihat'),
@@ -27,12 +29,21 @@ class _Level2ScreenState extends State<Level2Screen> {
     _Part('kaki', 'Kaki', '🦶', 'untuk berjalan'),
   ];
 
-  String? _selectedLeftId;
-  String? _selectedRightFunc;
   final List<_LineConnection> _connections = [];
   bool _submitted = false;
   List<_ScrambledItem> _scrambledLeft = [];
   List<_ScrambledItem> _scrambledRight = [];
+
+  Set<String> _correctLeftIds = {};
+  Set<String> _wrongLeftIds = {};
+
+  bool _isDragging = false;
+  String? _dragLeftId;
+  List<Offset> _dragPoints = [];
+
+  final GlobalKey _stackKey = GlobalKey();
+  final Map<String, GlobalKey> _leftKeys = {};
+  final Map<String, GlobalKey> _rightKeys = {};
 
   @override
   void initState() {
@@ -45,7 +56,6 @@ class _Level2ScreenState extends State<Level2Screen> {
     _scrambledRight = _parts.map((p) => _ScrambledItem(p.id, p.function)).toList()..shuffle();
   }
 
-  _Part get _currentPart => _parts[_currentPartIndex];
   bool get _allConnected => _connections.length == _parts.length;
 
   int get _correctCount {
@@ -57,12 +67,20 @@ class _Level2ScreenState extends State<Level2Screen> {
     return c;
   }
 
-  void _onPaperTap(bool isBob) {
+  String _getLabelById(String id) {
+    final item = _scrambledLeft.firstWhere((s) => s.id == id, orElse: () => _ScrambledItem('', ''));
+    final itemR = _scrambledRight.firstWhere((s) => s.label == id, orElse: () => _ScrambledItem('', ''));
+    if (item.label.isNotEmpty) return item.label;
+    return itemR.label;
+  }
+
+  void _onPaperTap(String cardId) {
     setState(() {
-      if (isBob) {
-        _paperBobClicked = true;
-      } else {
-        _paperBeepClicked = true;
+      switch (cardId) {
+        case 'bob_organ': _bobOrganClicked = true; break;
+        case 'bob_func': _bobFuncClicked = true; break;
+        case 'beep_organ': _beepOrganClicked = true; break;
+        case 'beep_func': _beepFuncClicked = true; break;
       }
     });
   }
@@ -71,49 +89,199 @@ class _Level2ScreenState extends State<Level2Screen> {
     if (index < 0 || index >= _parts.length) return;
     setState(() {
       _currentPartIndex = index;
-      _paperBobClicked = false;
-      _paperBeepClicked = false;
+      _bobOrganClicked = false;
+      _bobFuncClicked = false;
+      _beepOrganClicked = false;
+      _beepFuncClicked = false;
     });
   }
 
-  void _handleLeftTap(String id) {
-    if (_submitted) return;
-    setState(() {
-      if (_selectedLeftId == id) {
-        _selectedLeftId = null;
-      } else {
-        _selectedLeftId = id;
-        if (_selectedRightFunc != null) _makeConnection();
+  // ─────────────── DRAG HANDLERS (Section B) ───────────────
+
+  void _onPointerDown(PointerDownEvent event) {
+    final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    if (stackBox == null) return;
+    final localPos = stackBox.globalToLocal(event.position);
+
+    for (var item in _scrambledLeft) {
+      final key = _leftKeys[item.id];
+      final box = key?.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null) continue;
+      final cardPos = stackBox.globalToLocal(box.localToGlobal(Offset.zero));
+      final cardRect = cardPos & box.size;
+
+      if (cardRect.contains(localPos)) {
+        if (_submitted && _correctLeftIds.contains(item.id)) return;
+        if (_submitted && _wrongLeftIds.contains(item.id)) {
+          _wrongLeftIds.remove(item.id);
+        }
+        _connections.removeWhere((c) => c.leftId == item.id);
+
+        final startPos = Offset(cardRect.right, cardRect.center.dy);
+        _dragLeftId = item.id;
+        _dragPoints = [startPos];
+        _isDragging = true;
+        setState(() {});
+        return;
       }
-    });
+    }
   }
 
-  void _handleRightTap(String func) {
-    if (_submitted) return;
-    setState(() {
-      if (_selectedRightFunc == func) {
-        _selectedRightFunc = null;
-      } else {
-        _selectedRightFunc = func;
-        if (_selectedLeftId != null) _makeConnection();
+  void _onPointerMove(PointerMoveEvent event) {
+    if (!_isDragging || _dragLeftId == null) return;
+    _dragPoints.add(event.localPosition);
+    setState(() {});
+  }
+
+  void _onPointerUp(PointerUpEvent event) {
+    if (!_isDragging || _dragLeftId == null) {
+      _resetDrag();
+      return;
+    }
+
+    final stackBox = _stackKey.currentContext?.findRenderObject() as RenderBox?;
+    final localPos = stackBox != null
+        ? stackBox.globalToLocal(event.position)
+        : event.localPosition;
+
+    String? matchedRightLabel;
+    for (var item in _scrambledRight) {
+      final key = _rightKeys[item.label];
+      final box = key?.currentContext?.findRenderObject() as RenderBox?;
+      if (box == null) continue;
+      if (stackBox == null) continue;
+      final cardPos = stackBox.globalToLocal(box.localToGlobal(Offset.zero));
+      final cardRect = cardPos & box.size;
+
+      if (cardRect.contains(localPos)) {
+        matchedRightLabel = item.label;
+        break;
       }
-    });
+    }
+
+    if (matchedRightLabel != null) {
+      _connections.removeWhere((c) => c.rightFunc == matchedRightLabel);
+      _connections.add(_LineConnection(_dragLeftId!, matchedRightLabel, List.from(_dragPoints)));
+    }
+
+    _resetDrag();
+    setState(() {});
   }
 
-  void _makeConnection() {
-    if (_selectedLeftId == null || _selectedRightFunc == null) return;
-    final existing = _connections.indexWhere((c) => c.leftId == _selectedLeftId);
-    if (existing != -1) _connections.removeAt(existing);
-    final existingR = _connections.indexWhere((c) => c.rightFunc == _selectedRightFunc);
-    if (existingR != -1) _connections.removeAt(existingR);
-    _connections.add(_LineConnection(_selectedLeftId!, _selectedRightFunc!));
-    _selectedLeftId = null;
-    _selectedRightFunc = null;
+  void _resetDrag() {
+    _isDragging = false;
+    _dragLeftId = null;
+    _dragPoints = [];
   }
 
-  void _removeConnection(int index) {
-    if (_submitted) return;
-    setState(() => _connections.removeAt(index));
+  void _onSubmit() {
+    setState(() => _submitted = true);
+
+    _correctLeftIds = {};
+    _wrongLeftIds = {};
+    final wrongConns = <_LineConnection>[];
+    for (var conn in _connections) {
+      final part = _parts.firstWhere((p) => p.id == conn.leftId);
+      if (part.function == conn.rightFunc) {
+        _correctLeftIds.add(conn.leftId);
+      } else {
+        _wrongLeftIds.add(conn.leftId);
+        wrongConns.add(conn);
+      }
+    }
+
+    if (wrongConns.isNotEmpty) {
+      Future.delayed(const Duration(milliseconds: 600), () {
+        if (mounted) _showInsightDialog(wrongConns);
+      });
+    } else {
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) _showCompletionDialog(_correctCount);
+      });
+    }
+  }
+
+  void _showInsightDialog(List<_LineConnection> wrongConns) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          width: double.maxFinite,
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Ayo Pelajari Lagi!',
+                  style: GoogleFonts.jua(fontSize: 22, fontWeight: FontWeight.bold, color: const Color(0xFFE87E45))),
+              const SizedBox(height: 4),
+              Text('Beberapa jawaban masih belum tepat',
+                  style: GoogleFonts.jua(fontSize: 13, color: AppColors.darkGray)),
+              const SizedBox(height: 16),
+              ...wrongConns.map((conn) {
+                final part = _parts.firstWhere((p) => p.id == conn.leftId);
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(part.emoji, style: const TextStyle(fontSize: 24)),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(part.name,
+                                style: GoogleFonts.jua(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.black)),
+                            const SizedBox(height: 2),
+                            Text('Kamu menjawab: "${_getLabelById(conn.rightFunc)}"',
+                                style: GoogleFonts.jua(fontSize: 11, color: Colors.red)),
+                            const SizedBox(height: 2),
+                            Text('Yang benar: ${part.function}',
+                                style: GoogleFonts.jua(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.green)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _connections.removeWhere((c) => _wrongLeftIds.contains(c.leftId));
+                      _wrongLeftIds.clear();
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF75D035),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+                  ),
+                  child: Text('Coba Lagi',
+                      style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showCompletionDialog(int correct) {
@@ -170,8 +338,8 @@ class _Level2ScreenState extends State<Level2Screen> {
                       setState(() {
                         _submitted = false;
                         _connections.clear();
-                        _selectedLeftId = null;
-                        _selectedRightFunc = null;
+                        _correctLeftIds = {};
+                        _wrongLeftIds = {};
                         _scrambleSectionB();
                       });
                     },
@@ -209,9 +377,16 @@ class _Level2ScreenState extends State<Level2Screen> {
   // ─────────────────────────── SECTION A ───────────────────────────
 
   Widget _buildSectionA() {
+    final nextIndex = _currentPartIndex + 1;
+    final bobPart = _parts[_currentPartIndex];
+    final beepPart = nextIndex < _parts.length ? _parts[nextIndex] : null;
+    final totalPages = (_parts.length + 1) ~/ 2;
+    final currentPage = _currentPartIndex ~/ 2;
+
     return Column(
       children: [
         _buildTopBar(),
+        const SizedBox(height: 40),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text('Kenali Organ & Fungsinya',
@@ -219,66 +394,111 @@ class _Level2ScreenState extends State<Level2Screen> {
               textAlign: TextAlign.center),
         ),
         const SizedBox(height: 4),
-        Text('${_currentPartIndex + 1}/${_parts.length}',
+        Text('${currentPage + 1}/$totalPages',
             style: GoogleFonts.jua(fontSize: 14, color: AppColors.darkGray)),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 78),
             child: Column(
               children: [
                 Expanded(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Bob (Nama)
                       Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Image.asset(
-                                'assets/images/bob_kertas.png',
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, _, _) => Center(
-                                  child: Text('Bob', style: GoogleFonts.jua(fontSize: 14, color: AppColors.darkGray)),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) => Stack(
+                            children: [
+                              Positioned.fill(
+                                child: Image.asset(
+                                  'assets/images/bob_kertas.png',
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (_, _, _) => Center(
+                                    child: Text('Bob', style: GoogleFonts.jua(fontSize: 14, color: AppColors.darkGray)),
+                                  ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            _buildPaper(
-                              label: _paperBobClicked ? _currentPart.name : 'Klik disini',
-                              emoji: _paperBobClicked ? _currentPart.emoji : null,
-                              isClicked: _paperBobClicked,
-                              onTap: () => _onPaperTap(true),
-                            ),
-                          ],
+                              Positioned(
+                                top: constraints.maxHeight * 0.40 - 25,
+                                left: constraints.maxWidth * 0.08 - 10,
+                                width: constraints.maxWidth * 0.36,
+                                height: constraints.maxHeight * 0.22,
+                                child: _buildPaper(
+                                  label: _bobOrganClicked ? bobPart.name : 'Klik',
+                                  emoji: _bobOrganClicked ? bobPart.emoji : null,
+                                  isClicked: _bobOrganClicked,
+                                  onTap: () => _onPaperTap('bob_organ'),
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  minimal: true,
+                                ),
+                              ),
+                              Positioned(
+                                top: constraints.maxHeight * 0.40 - 25,
+                                right: constraints.maxWidth * 0.08 - 8,
+                                width: constraints.maxWidth * 0.36,
+                                height: constraints.maxHeight * 0.22,
+                                child: _buildPaper(
+                                  label: _bobFuncClicked ? bobPart.function : 'Klik',
+                                  isClicked: _bobFuncClicked,
+                                  onTap: () => _onPaperTap('bob_func'),
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                  minimal: true,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Beep (Fungsi)
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: Image.asset(
-                                'assets/images/beep_kertas.png',
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, _, _) => Center(
-                                  child: Text('Beep', style: GoogleFonts.jua(fontSize: 14, color: AppColors.darkGray)),
+                      if (beepPart != null)
+                        Expanded(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) => Stack(
+                              children: [
+                                Positioned.fill(
+                                  child: Image.asset(
+                                    'assets/images/beep_kertas.png',
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (_, _, _) => Center(
+                                      child: Text('Beep', style: GoogleFonts.jua(fontSize: 14, color: AppColors.darkGray)),
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                Positioned(
+                                  top: constraints.maxHeight * 0.40 - 8,
+                                  left: constraints.maxWidth * 0.08 - 10,
+                                  width: constraints.maxWidth * 0.36,
+                                  height: constraints.maxHeight * 0.22,
+                                  child: _buildPaper(
+                                    label: _beepOrganClicked ? beepPart.name : 'Klik',
+                                    emoji: _beepOrganClicked ? beepPart.emoji : null,
+                                    isClicked: _beepOrganClicked,
+                                    onTap: () => _onPaperTap('beep_organ'),
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    minimal: true,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: constraints.maxHeight * 0.40,
+                                  right: constraints.maxWidth * 0.08 - 15,
+                                  width: constraints.maxWidth * 0.36,
+                                  height: constraints.maxHeight * 0.22,
+                                  child: _buildPaper(
+                                    label: _beepFuncClicked ? beepPart.function : 'Klik',
+                                    isClicked: _beepFuncClicked,
+                                    onTap: () => _onPaperTap('beep_func'),
+                                    width: double.infinity,
+                                    height: double.infinity,
+                                    minimal: true,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 4),
-                            _buildPaper(
-                              label: _paperBeepClicked ? _currentPart.function : 'Klik disini',
-                              emoji: _paperBeepClicked ? _currentPart.emoji : null,
-                              isClicked: _paperBeepClicked,
-                              onTap: () => _onPaperTap(false),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -286,21 +506,21 @@ class _Level2ScreenState extends State<Level2Screen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _navArrow(Icons.arrow_back_ios, _currentPartIndex > 0, () => _goToPart(_currentPartIndex - 1)),
+                    _navArrow(Icons.arrow_back_ios, currentPage > 0, () => _goToPart(_currentPartIndex - 2)),
                     const SizedBox(width: 24),
-                    _navArrow(Icons.arrow_forward_ios, _currentPartIndex < _parts.length - 1, () => _goToPart(_currentPartIndex + 1)),
+                    _navArrow(Icons.arrow_forward_ios, currentPage < totalPages - 1, () => _goToPart(_currentPartIndex + 2)),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(_parts.length, (i) {
+                  children: List.generate(totalPages, (i) {
                     return Container(
                       margin: const EdgeInsets.symmetric(horizontal: 3),
-                      width: i == _currentPartIndex ? 20 : 8,
+                      width: i == currentPage ? 20 : 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: i == _currentPartIndex ? const Color(0xFF75D035) : AppColors.gray.withValues(alpha: 0.4),
+                        color: i == currentPage ? const Color(0xFF75D035) : AppColors.gray.withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(4),
                       ),
                     );
@@ -308,8 +528,7 @@ class _Level2ScreenState extends State<Level2Screen> {
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
-                  width: 220,
-                  height: 48,
+                  width: 220, height: 48,
                   child: ElevatedButton(
                     onPressed: () {
                       _scrambleSectionB();
@@ -331,13 +550,44 @@ class _Level2ScreenState extends State<Level2Screen> {
     );
   }
 
-  Widget _buildPaper({required String label, String? emoji, required bool isClicked, required VoidCallback onTap}) {
+  Widget _buildPaper({required String label, String? emoji, required bool isClicked, required VoidCallback onTap, double? width, double? height, bool minimal = false}) {
+    if (minimal) {
+      return GestureDetector(
+        onTap: isClicked ? null : onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: width,
+          height: height,
+          alignment: Alignment.center,
+          child: isClicked
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (emoji != null) ...[
+                      Text(emoji, style: const TextStyle(fontSize: 20)),
+                      const SizedBox(height: 2),
+                    ],
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: Text(label,
+                          style: GoogleFonts.jua(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.black),
+                          textAlign: TextAlign.center),
+                    ),
+                  ],
+                )
+              : Text('Klik',
+                  style: GoogleFonts.jua(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.w600)),
+        ),
+      );
+    }
+
     return GestureDetector(
       onTap: isClicked ? null : onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 400),
-        width: 150,
-        height: 100,
+        width: width ?? 150,
+        height: height ?? 100,
         decoration: BoxDecoration(
           color: isClicked ? Colors.white : const Color(0xFFFFF3E0),
           borderRadius: BorderRadius.circular(10),
@@ -356,12 +606,14 @@ class _Level2ScreenState extends State<Level2Screen> {
             ? Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(emoji ?? '', style: const TextStyle(fontSize: 28)),
-                  const SizedBox(height: 4),
+                  if (emoji != null) ...[
+                    Text(emoji, style: const TextStyle(fontSize: 20)),
+                    const SizedBox(height: 2),
+                  ],
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Text(label,
-                        style: GoogleFonts.jua(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.black),
+                        style: GoogleFonts.jua(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.black),
                         textAlign: TextAlign.center),
                   ),
                 ],
@@ -370,10 +622,10 @@ class _Level2ScreenState extends State<Level2Screen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.touch_app, size: 18, color: Colors.orange),
-                    const SizedBox(width: 4),
-                    Text('Klik disini',
-                        style: GoogleFonts.jua(fontSize: 13, color: Colors.orange, fontWeight: FontWeight.w600)),
+                    const Icon(Icons.touch_app, size: 14, color: Colors.orange),
+                    const SizedBox(width: 2),
+                    Text('Klik',
+                        style: GoogleFonts.jua(fontSize: 10, color: Colors.orange, fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
@@ -398,65 +650,82 @@ class _Level2ScreenState extends State<Level2Screen> {
   // ─────────────────────────── SECTION B ───────────────────────────
 
   Widget _buildSectionB() {
+    final bool isSubmitEnabled = _allConnected && !_submitted;
+
     return Column(
       children: [
         _buildTopBar(),
+        const SizedBox(height: 44),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text('Tarik Garis ke Fungsi yang Tepat!',
               style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.black),
               textAlign: TextAlign.center),
         ),
+        const SizedBox(height: 14),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
             child: Stack(
+              key: _stackKey,
+              clipBehavior: Clip.hardEdge,
               children: [
-                CustomPaint(
-                  size: Size.infinite,
-                  painter: _ConnectionPainter(
-                    connections: _connections,
-                    correctIds: _submitted ? _parts.map((p) => p.id).toSet() : {},
-                    isCorrectMap: _submitted
-                        ? Map.fromEntries(_parts.map((p) => MapEntry(p.id, p.function)))
-                        : {},
-                    submitted: _submitted,
-                    parts: _parts,
-                    leftKeys: _leftKeys,
-                    rightKeys: _rightKeys,
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: Level2ConnectionPainter(
+                      connections: _connections,
+                      parts: _parts,
+                      leftKeys: _leftKeys,
+                      rightKeys: _rightKeys,
+                      submitted: _submitted,
+                      correctLeftIds: _correctLeftIds,
+                      wrongLeftIds: _wrongLeftIds,
+                      stackKey: _stackKey,
+                      dragLeftId: _dragLeftId,
+                      dragPoints: _dragPoints,
+                    ),
                   ),
                 ),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: _buildColumn(true)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildColumn(false)),
+                    SizedBox(width: 130, child: _buildColumn(true)),
+                    const SizedBox(width: 44),
+                    SizedBox(width: 130, child: _buildColumn(false)),
                   ],
+                ),
+                Positioned.fill(
+                  child: Listener(
+                    behavior: HitTestBehavior.translucent,
+                    onPointerDown: _onPointerDown,
+                    onPointerMove: _onPointerMove,
+                    onPointerUp: _onPointerUp,
+                  ),
                 ),
               ],
             ),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
           child: SizedBox(
             width: 200, height: 48,
             child: ElevatedButton(
-              onPressed: (_allConnected && !_submitted)
-                  ? () {
-                      setState(() => _submitted = true);
-                      Future.delayed(const Duration(seconds: 5), () {
-                        if (mounted) _showCompletionDialog(_correctCount);
-                      });
-                    }
-                  : null,
+              onPressed: isSubmitEnabled
+                  ? _onSubmit
+                  : (_submitted ? null : null),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF75D035),
+                backgroundColor: isSubmitEnabled
+                    ? const Color(0xFF75D035)
+                    : AppColors.gray,
                 disabledBackgroundColor: AppColors.gray,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
               ),
-              child: Text(_submitted ? 'Selesai' : 'Submit',
-                  style: GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
+              child: Text(
+                _submitted ? 'Selesai' : 'Submit',
+                style: GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white),
+              ),
             ),
           ),
         ),
@@ -464,89 +733,101 @@ class _Level2ScreenState extends State<Level2Screen> {
     );
   }
 
-  final Map<String, GlobalKey> _leftKeys = {};
-  final Map<String, GlobalKey> _rightKeys = {};
-
   Widget _buildColumn(bool isLeft) {
     final items = isLeft ? _scrambledLeft : _scrambledRight;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(isLeft ? 'Organ Tubuh' : 'Fungsi',
-            style: GoogleFonts.jua(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.darkGray)),
-        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Text(isLeft ? 'Organ Tubuh' : 'Fungsi',
+              style: GoogleFonts.jua(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.darkGray)),
+        ),
         ...items.map((item) {
           final connected = _connections.any((c) => isLeft ? c.leftId == item.id : c.rightFunc == item.label);
-          final isSelected = isLeft ? _selectedLeftId == item.id : _selectedRightFunc == item.label;
 
           bool isCorrect = false;
           bool isWrong = false;
-          if (_submitted && connected) {
+          if (connected && _submitted) {
             if (isLeft) {
-              final c = _connections.firstWhere((c) => c.leftId == item.id);
-              isCorrect = _parts.firstWhere((p) => p.id == item.id).function == c.rightFunc;
-              isWrong = !isCorrect;
+              isCorrect = _correctLeftIds.contains(item.id);
+              isWrong = _wrongLeftIds.contains(item.id);
             } else {
-              final c = _connections.firstWhere((c) => c.rightFunc == item.label);
-              final part = _parts.firstWhere((p) => p.function == item.label);
-              isCorrect = c.leftId == part.id;
-              isWrong = !isCorrect;
+              final conn = _connections.firstWhere((c) => c.rightFunc == item.label,
+                  orElse: () => _LineConnection('', ''));
+              if (conn.leftId.isNotEmpty) {
+                isCorrect = _correctLeftIds.contains(conn.leftId);
+                isWrong = _wrongLeftIds.contains(conn.leftId);
+              }
             }
           }
 
-          Color bg = Colors.white;
-          Color border = AppColors.gray.withValues(alpha: 0.4);
-          if (isCorrect) { bg = Colors.green.withValues(alpha: 0.12); border = Colors.green; }
-          else if (isWrong) { bg = Colors.red.withValues(alpha: 0.12); border = Colors.red; }
-          else if (isSelected) { bg = AppColors.primaryBlue.withValues(alpha: 0.12); border = AppColors.primaryBlue; }
-          else if (connected) { bg = const Color(0xFFF0F8FF); border = AppColors.primaryBlue.withValues(alpha: 0.6); }
+          final isDragSource = _isDragging && isLeft && _dragLeftId == item.id;
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 3),
-            child: GestureDetector(
-              onTap: _submitted ? null : () {
-                if (isLeft) {
-                  _handleLeftTap(item.id);
-                } else {
-                  _handleRightTap(item.label);
-                }
-                if (isLeft && connected) {
-                  final idx = _connections.indexWhere((c) => c.leftId == item.id);
-                  if (idx != -1) _removeConnection(idx);
-                } else if (!isLeft && connected) {
-                  final idx = _connections.indexWhere((c) => c.rightFunc == item.label);
-                  if (idx != -1) _removeConnection(idx);
-                }
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                key: isLeft ? _leftKeys.putIfAbsent(item.id, () => GlobalKey())
-                           : _rightKeys.putIfAbsent(item.label, () => GlobalKey()),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                decoration: BoxDecoration(
-                  color: bg,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: border, width: 1.5),
+          Color bg;
+          Color border;
+          if (isCorrect) {
+            bg = Colors.green.withValues(alpha: 0.12);
+            border = Colors.green;
+          } else if (isWrong) {
+            bg = Colors.red.withValues(alpha: 0.12);
+            border = Colors.red;
+          } else if (connected) {
+            bg = const Color(0xFFF0F8FF);
+            border = AppColors.primaryBlue.withValues(alpha: 0.6);
+          } else if (isDragSource) {
+            bg = AppColors.primaryBlue.withValues(alpha: 0.12);
+            border = AppColors.primaryBlue;
+          } else {
+            bg = Colors.white;
+            border = AppColors.gray.withValues(alpha: 0.4);
+          }
+
+          return Container(
+            key: isLeft ? _leftKeys.putIfAbsent(item.id, () => GlobalKey())
+                         : _rightKeys.putIfAbsent(item.label, () => GlobalKey()),
+            width: double.infinity,
+            height: 54,
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: border, width: 1.5),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_submitted && connected && !isLeft)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Icon(
+                      isCorrect ? Icons.check_circle : Icons.cancel,
+                      size: 16, color: isCorrect ? Colors.green : Colors.red,
+                    ),
+                  ),
+                Expanded(
+                  child: Text(
+                    item.label,
+                    style: GoogleFonts.jua(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.black,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (connected && !isLeft)
-                      Icon(
-                        isCorrect ? Icons.check_circle : Icons.cancel,
-                        size: 14, color: isCorrect ? Colors.green : Colors.red,
-                      ),
-                    Flexible(child: Text(item.label,
-                        style: GoogleFonts.jua(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.black),
-                        textAlign: TextAlign.center)),
-                    if (connected && isLeft)
-                      Icon(
-                        isCorrect ? Icons.check_circle : Icons.cancel,
-                        size: 14, color: isCorrect ? Colors.green : Colors.red,
-                      ),
-                  ],
-                ),
-              ),
+                if (_submitted && connected && isLeft)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Icon(
+                      isCorrect ? Icons.check_circle : Icons.cancel,
+                      size: 16, color: isCorrect ? Colors.green : Colors.red,
+                    ),
+                  ),
+              ],
             ),
           );
         }),
@@ -578,8 +859,8 @@ class _Level2ScreenState extends State<Level2Screen> {
                 setState(() {
                   _submitted = false;
                   _connections.clear();
-                  _selectedLeftId = null;
-                  _selectedRightFunc = null;
+                  _correctLeftIds = {};
+                  _wrongLeftIds = {};
                   _scrambleSectionB();
                 });
               }
@@ -628,6 +909,8 @@ class _Level2ScreenState extends State<Level2Screen> {
   }
 }
 
+// ─────────────────────── DATA CLASSES ───────────────────────
+
 class _Part {
   final String id, name, emoji, function;
   const _Part(this.id, this.name, this.emoji, this.function);
@@ -640,59 +923,91 @@ class _ScrambledItem {
 
 class _LineConnection {
   final String leftId, rightFunc;
-  const _LineConnection(this.leftId, this.rightFunc);
+  final List<Offset>? dragPoints;
+  const _LineConnection(this.leftId, this.rightFunc, [this.dragPoints]);
 }
 
-class _ConnectionPainter extends CustomPainter {
+// ─────────────────────── PAINTER ───────────────────────
+
+class Level2ConnectionPainter extends CustomPainter {
   final List<_LineConnection> connections;
-  final Set<String> correctIds;
-  final Map<String, String> isCorrectMap;
-  final bool submitted;
   final List<_Part> parts;
   final Map<String, GlobalKey> leftKeys;
   final Map<String, GlobalKey> rightKeys;
+  final bool submitted;
+  final Set<String> correctLeftIds;
+  final Set<String> wrongLeftIds;
+  final GlobalKey stackKey;
+  final String? dragLeftId;
+  final List<Offset> dragPoints;
 
-  _ConnectionPainter({
-    required this.connections, required this.correctIds,
-    required this.isCorrectMap, required this.submitted,
-    required this.parts, required this.leftKeys, required this.rightKeys,
+  Level2ConnectionPainter({
+    required this.connections, required this.parts,
+    required this.leftKeys, required this.rightKeys,
+    required this.submitted, required this.correctLeftIds,
+    required this.wrongLeftIds, required this.stackKey,
+    this.dragLeftId, required this.dragPoints,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
+    final stackBox = stackKey.currentContext?.findRenderObject() as RenderBox?;
+    if (stackBox == null) return;
+
     for (var conn in connections) {
       final leftKey = leftKeys[conn.leftId];
       final rightKey = rightKeys[conn.rightFunc];
-      if (leftKey == null || rightKey == null) continue;
+      if (leftKey?.currentContext == null || rightKey?.currentContext == null) continue;
 
-      final leftRenderBox = leftKey.currentContext?.findRenderObject() as RenderBox?;
-      final rightRenderBox = rightKey.currentContext?.findRenderObject() as RenderBox?;
-      if (leftRenderBox == null || rightRenderBox == null) continue;
+      final leftBox = leftKey!.currentContext!.findRenderObject() as RenderBox;
+      final rightBox = rightKey!.currentContext!.findRenderObject() as RenderBox;
 
-      final leftPos = leftRenderBox.localToGlobal(Offset(leftRenderBox.size.width, leftRenderBox.size.height / 2), ancestor: null);
-      final rightPos = rightRenderBox.localToGlobal(Offset(0, rightRenderBox.size.height / 2), ancestor: null);
+      final start = stackBox.globalToLocal(leftBox.localToGlobal(Offset(leftBox.size.width, leftBox.size.height / 2)));
+      final end = stackBox.globalToLocal(rightBox.localToGlobal(Offset(0, rightBox.size.height / 2)));
 
-      final part = parts.firstWhere((p) => p.id == conn.leftId);
-      final isCorrect = submitted && part.function == conn.rightFunc;
+      final isCorrect = submitted && correctLeftIds.contains(conn.leftId);
+      final isWrong = submitted && wrongLeftIds.contains(conn.leftId);
 
       final paint = Paint()
-        ..color = isCorrect ? Colors.green : (submitted ? Colors.red : const Color(0xFF4FA8DF))
-        ..strokeWidth = 3
-        ..style = PaintingStyle.stroke;
+        ..color = isCorrect ? Colors.green : (isWrong ? Colors.red : const Color(0xFF4FA8DF))
+        ..strokeWidth = 3.5
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
 
-      final path = Path()
-        ..moveTo(leftPos.dx, leftPos.dy)
-        ..cubicTo(
-          (leftPos.dx + rightPos.dx) / 2, leftPos.dy,
-          (leftPos.dx + rightPos.dx) / 2, rightPos.dy,
-          rightPos.dx, rightPos.dy,
-        );
+      final path = Path();
+      if (conn.dragPoints != null && conn.dragPoints!.isNotEmpty) {
+        path.moveTo(conn.dragPoints!.first.dx, conn.dragPoints!.first.dy);
+        for (int i = 1; i < conn.dragPoints!.length; i++) {
+          path.lineTo(conn.dragPoints![i].dx, conn.dragPoints![i].dy);
+        }
+        path.lineTo(end.dx, end.dy);
+      } else {
+        path.moveTo(start.dx, start.dy);
+        path.lineTo(end.dx, end.dy);
+      }
+      canvas.drawPath(path, paint);
+    }
+
+    if (dragLeftId != null && dragPoints.isNotEmpty) {
+      final paint = Paint()
+        ..color = const Color(0xFF4FA8DF).withValues(alpha: 0.5)
+        ..strokeWidth = 3.5
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
+
+      final path = Path();
+      path.moveTo(dragPoints.first.dx, dragPoints.first.dy);
+      for (int i = 1; i < dragPoints.length; i++) {
+        path.lineTo(dragPoints[i].dx, dragPoints[i].dy);
+      }
       canvas.drawPath(path, paint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _ConnectionPainter oldDelegate) => true;
+  bool shouldRepaint(covariant Level2ConnectionPainter oldDelegate) => true;
 }
 
 class _CircleButton extends StatelessWidget {

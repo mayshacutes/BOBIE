@@ -65,8 +65,8 @@ class _YellowHeader extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           SizedBox(
-            width: 80,
-            height: 80,
+            width: 120,
+            height: 120,
             child: Image.asset(
               'assets/images/avatar_cewe.png',
               fit: BoxFit.contain,
@@ -74,7 +74,7 @@ class _YellowHeader extends StatelessWidget {
                 child: Text(
                   name.isNotEmpty ? name[0].toUpperCase() : '?',
                   style: GoogleFonts.jua(
-                    fontSize: 32,
+                    fontSize: 48,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
