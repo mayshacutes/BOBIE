@@ -212,7 +212,7 @@ class _Level1ScreenState extends State<Level1Screen> {
                         children: [
                           Center(
                             child: Image.asset(
-                              'assets/images/bob_renang.png',
+                              widget.gender == MascotGender.girl ? 'assets/images/Beep_renang.png' : 'assets/images/bob_renang.png',
                               width: cw * 0.85,
                               height: ch * 0.85,
                               fit: BoxFit.contain,
@@ -422,7 +422,7 @@ class _Level1ScreenState extends State<Level1Screen> {
                 width: imageWidth,
                 height: imageHeight,
                 child: Image.asset(
-                  'assets/images/bob_renang.png',
+                  widget.gender == MascotGender.girl ? 'assets/images/Beep_renang.png' : 'assets/images/bob_renang.png',
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) => Center(
                     child: Text('Gambar Bob',

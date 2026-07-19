@@ -1,7 +1,9 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../theme.dart';
 import '../../models/modul.dart';
+import '../../models/app_user.dart';
 
 class LevelGameScreen extends StatefulWidget {
   const LevelGameScreen({super.key});
@@ -14,16 +16,17 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
   late Level _level;
   late String _modulId;
   late List<Modul> _moduls;
+  MascotGender _gender = MascotGender.boy;
   bool soundOn = true;
   bool showResult = false;
 
   final List<_BodyPart> _bodyParts = [
-    _BodyPart('rambut', 'Rambut', 0.50, 0.07),
-    _BodyPart('mata', 'Mata', 0.50, 0.19),
-    _BodyPart('mulut', 'Mulut', 0.50, 0.32),
-    _BodyPart('tangan', 'Tangan', 0.15, 0.52),
-    _BodyPart('perut', 'Perut', 0.50, 0.56),
-    _BodyPart('kaki', 'Kaki', 0.50, 0.84),
+    _BodyPart('rambut', 'Rambut', 0.50, 0.07, 'left', 0.07),
+    _BodyPart('mata', 'Mata', 0.58, 0.25, 'right', 0.22),
+    _BodyPart('mulut', 'Mulut', 0.50, 0.26, 'left', 0.31),
+    _BodyPart('tangan', 'Tangan', 0.20, 0.51, 'left', 0.53),
+    _BodyPart('perut', 'Perut', 0.50, 0.57, 'right', 0.51),
+    _BodyPart('kaki', 'Kaki', 0.56, 0.85, 'right', 0.85),
   ];
 
   late Map<String, String?> _dropTargets;
@@ -39,6 +42,7 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
       final modul = _moduls.firstWhere((m) => m.id == _modulId);
       final levelNumber = args['level'] as int;
       _level = modul.levels.firstWhere((l) => l.number == levelNumber);
+      _gender = args['gender'] as MascotGender? ?? MascotGender.boy;
     }
     _dropTargets = {for (var p in _bodyParts) p.id: null};
     _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
@@ -165,41 +169,6 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
     );
   }
 
-  Widget _buildResultButton({
-    required IconData icon,
-    required List<Color> gradient,
-    required String label,
-    required VoidCallback onPressed,
-  }) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: gradient),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: gradient.last.withValues(alpha: 0.3),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Icon(icon, color: Colors.white, size: 22),
-          ),
-          const SizedBox(height: 4),
-          Text(label,
-              style: GoogleFonts.jua(fontSize: 11, fontWeight: FontWeight.w600, color: gradient.first)),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -208,20 +177,22 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
         child: Column(
           children: [
             _buildTopBar(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text('Apa saja bagian tubuhku?',
+                  style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.black),
+                  textAlign: TextAlign.center),
+            ),
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
                   child: Column(
                     children: [
-                      Text('Apa saja bagian tubuhku?',
-                          style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.black),
-                          textAlign: TextAlign.center),
+                      _buildGameArea(),
                       const SizedBox(height: 12),
-                      _buildBodyImage(),
-                      const SizedBox(height: 16),
                       _buildLabelsRow(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 32),
                       SizedBox(
                         width: 200,
                         height: 48,
@@ -232,7 +203,7 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
                             disabledBackgroundColor: AppColors.gray,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                           ),
-                          child: Text('Submit',
+                          child: Text(showResult ? 'Selesai' : 'Submit',
                               style: GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
                         ),
                       ),
@@ -283,38 +254,77 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
     );
   }
 
-  Widget _buildBodyImage() {
+  Widget _buildGameArea() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cw = constraints.maxWidth;
-        final ch = cw * 1.3;
-        return Container(
-          width: cw,
-          height: ch,
-          decoration: BoxDecoration(
-            color: AppColors.lightSkyBlue.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(16),
-          ),
+        final W = constraints.maxWidth;
+        final areaHeight = W * 1.3;
+
+        final marginX = W * 0.22;
+        final imageLeft = marginX;
+        final imageRight = W - marginX;
+        final imageWidth = imageRight - imageLeft;
+        final imageTop = areaHeight * 0.04;
+        final imageBottom = areaHeight * 0.96;
+        final imageHeight = imageBottom - imageTop;
+
+        const boxW = 68.0;
+        const boxH = 28.0;
+        final leftBoxRight = 24.0 + boxW;
+        final rightBoxLeft = W - 24.0 - boxW;
+
+        final arrows = <_ArrowData>[];
+        for (var part in _bodyParts) {
+          final mX = imageLeft + part.markerX * imageWidth;
+          final mY = imageTop + part.markerY * imageHeight;
+          final bY = imageTop + part.boxY * areaHeight;
+          if (part.side == 'left') {
+            arrows.add(_ArrowData(Offset(leftBoxRight, bY), Offset(mX, mY)));
+          } else {
+            arrows.add(_ArrowData(Offset(rightBoxLeft, bY), Offset(mX, mY)));
+          }
+        }
+
+        final imageAsset = _gender == MascotGender.girl
+            ? 'assets/images/Beep_renang.png'
+            : 'assets/images/bob_renang.png';
+
+        return SizedBox(
+          width: W,
+          height: areaHeight,
           child: Stack(
+            clipBehavior: Clip.none,
             children: [
-              Center(
+              Positioned.fill(
+                child: CustomPaint(painter: _ArrowPainter(arrows: arrows)),
+              ),
+              Positioned(
+                left: imageLeft,
+                top: imageTop,
+                width: imageWidth,
+                height: imageHeight,
                 child: Image.asset(
-                  'assets/images/bob_renang.png',
-                  width: cw * 0.85,
-                  height: ch * 0.85,
+                  imageAsset,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) => Center(
-                    child: Text('Gambar Bob',
+                    child: Text('Gambar',
                         style: GoogleFonts.jua(fontSize: 16, color: AppColors.darkGray)),
                   ),
                 ),
               ),
               for (var part in _bodyParts)
-                Positioned(
-                  left: cw * part.relX - 30,
-                  top: ch * part.relY - 12,
-                  child: _buildDropZone(part, 60, 24),
-                ),
+                if (part.side == 'left')
+                  Positioned(
+                    left: 24,
+                    top: imageTop + part.boxY * areaHeight - boxH / 2,
+                    child: _buildDropBox(part, boxW, boxH),
+                  )
+                else
+                  Positioned(
+                    right: 24,
+                    top: imageTop + part.boxY * areaHeight - boxH / 2,
+                    child: _buildDropBox(part, boxW, boxH),
+                  ),
             ],
           ),
         );
@@ -322,7 +332,7 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
     );
   }
 
-  Widget _buildDropZone(_BodyPart part, double w, double h) {
+  Widget _buildDropBox(_BodyPart part, double boxW, double boxH) {
     final isFilled = _dropTargets[part.id] != null;
     final isCorrect = showResult && _dropTargets[part.id] == part.id;
     final isWrong = showResult && _dropTargets[part.id] != null && _dropTargets[part.id] != part.id;
@@ -332,19 +342,19 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
       builder: (context, candidateData, rejectedData) {
         final isHovering = candidateData.isNotEmpty;
         return GestureDetector(
-          onTap: isFilled ? () => _removeLabelFromSlot(part.id) : null,
+          onTap: isFilled && !showResult ? () => _removeLabelFromSlot(part.id) : null,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            width: w,
-            height: h,
+            width: boxW,
+            height: boxH,
             decoration: BoxDecoration(
               color: isCorrect
-                  ? Colors.green.withValues(alpha: 0.25)
+                  ? Colors.green.withValues(alpha: 0.2)
                   : isWrong
-                      ? Colors.red.withValues(alpha: 0.25)
+                      ? Colors.red.withValues(alpha: 0.2)
                       : isHovering
                           ? AppColors.primaryBlue.withValues(alpha: 0.15)
-                          : Colors.white.withValues(alpha: 0.85),
+                          : Colors.white,
               borderRadius: BorderRadius.circular(6),
               border: Border.all(
                 color: isCorrect
@@ -353,7 +363,7 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
                         ? Colors.red
                         : isFilled
                             ? AppColors.primaryBlue
-                            : AppColors.gray,
+                            : AppColors.gray.withValues(alpha: 0.6),
                 width: isFilled ? 2 : 1.5,
               ),
             ),
@@ -363,7 +373,7 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
                     children: [
                       Flexible(
                         child: Text(
-                          _dropTargets[part.id]!,
+                          _bodyParts.firstWhere((p) => p.id == _dropTargets[part.id]).label,
                           style: GoogleFonts.jua(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
@@ -383,9 +393,7 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
                         ),
                     ],
                   )
-                : Center(
-                    child: Icon(Icons.drag_indicator, size: 14, color: AppColors.gray.withValues(alpha: 0.6)),
-                  ),
+                : const SizedBox(),
           ),
         );
       },
@@ -394,58 +402,117 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
 
   Widget _buildLabelsRow() {
     if (showResult) return const SizedBox();
-    return Wrap(
-      spacing: 8,
-      runSpacing: 6,
-      alignment: WrapAlignment.center,
-      children: _availableLabels.map((label) {
-        final part = _bodyParts.firstWhere((p) => p.id == label);
-        return Draggable<String>(
-          data: label,
-          feedback: Material(
-            elevation: 4,
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.primaryBlue,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(part.label,
-                  style: GoogleFonts.jua(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
-            ),
-          ),
-          childWhenDragging: Opacity(
-            opacity: 0.3,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.lightGray,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.gray),
-              ),
-              child: Text(part.label, style: GoogleFonts.jua(fontSize: 13, color: AppColors.gray)),
-            ),
-          ),
+    final labels = _bodyParts.map((p) => p.id).toList();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: labels.sublist(0, 3).map((id) => _buildLabelChip(id)).toList(),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: labels.sublist(3, 6).map((id) => _buildLabelChip(id)).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLabelChip(String labelId) {
+    final part = _bodyParts.firstWhere((p) => p.id == labelId);
+    final isAvailable = _availableLabels.contains(labelId);
+    if (!isAvailable) return const SizedBox(width: 90);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Draggable<String>(
+        data: labelId,
+        feedback: Material(
+          elevation: 4,
+          borderRadius: BorderRadius.circular(12),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            width: 82,
+            height: 36,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Colors.white,
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFDD52E), Color(0xFF977F1B)],
+              ),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.primaryBlue, width: 1.5),
+            ),
+            child: Text(part.label,
+                style: GoogleFonts.jua(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF3D3A3B))),
+          ),
+        ),
+        childWhenDragging: Opacity(
+          opacity: 0.3,
+          child: Container(
+            width: 82,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.lightGray,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(part.label, style: GoogleFonts.jua(fontSize: 12, color: AppColors.gray)),
+          ),
+        ),
+        child: Container(
+          width: 82,
+          height: 36,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFFFDD52E), Color(0xFF977F1B)],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Text(part.label,
+              style: GoogleFonts.jua(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF3D3A3B))),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultButton({
+    required IconData icon,
+    required List<Color> gradient,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: gradient),
+              shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
+                  color: gradient.last.withValues(alpha: 0.3),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
               ],
             ),
-            child: Text(part.label,
-                style: GoogleFonts.jua(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.primaryBlue)),
+            child: Icon(icon, color: Colors.white, size: 22),
           ),
-        );
-      }).toList(),
+          const SizedBox(height: 4),
+          Text(label,
+              style: GoogleFonts.jua(fontSize: 11, fontWeight: FontWeight.w600, color: gradient.first)),
+        ],
+      ),
     );
   }
 }
@@ -453,9 +520,58 @@ class _LevelGameScreenState extends State<LevelGameScreen> {
 class _BodyPart {
   final String id;
   final String label;
-  final double relX;
-  final double relY;
-  const _BodyPart(this.id, this.label, this.relX, this.relY);
+  final double markerX;
+  final double markerY;
+  final String side;
+  final double boxY;
+  const _BodyPart(this.id, this.label, this.markerX, this.markerY, this.side, this.boxY);
+}
+
+class _ArrowData {
+  final Offset from;
+  final Offset to;
+  const _ArrowData(this.from, this.to);
+}
+
+class _ArrowPainter extends CustomPainter {
+  final List<_ArrowData> arrows;
+  _ArrowPainter({required this.arrows});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.darkGray.withValues(alpha: 0.35)
+      ..strokeWidth = 1.5
+      ..style = PaintingStyle.stroke;
+
+    for (var arrow in arrows) {
+      canvas.drawLine(arrow.from, arrow.to, paint);
+
+      final dx = arrow.to.dx - arrow.from.dx;
+      final dy = arrow.to.dy - arrow.from.dy;
+      if (dx == 0 && dy == 0) continue;
+      final angle = math.atan2(dy, dx);
+      const arrowLen = 8.0;
+      const arrowAngle = 0.5;
+
+      final path = Path()
+        ..moveTo(arrow.to.dx, arrow.to.dy)
+        ..lineTo(
+          arrow.to.dx - arrowLen * math.cos(angle - arrowAngle),
+          arrow.to.dy - arrowLen * math.sin(angle - arrowAngle),
+        )
+        ..moveTo(arrow.to.dx, arrow.to.dy)
+        ..lineTo(
+          arrow.to.dx - arrowLen * math.cos(angle + arrowAngle),
+          arrow.to.dy - arrowLen * math.sin(angle + arrowAngle),
+        );
+
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ArrowPainter oldDelegate) => true;
 }
 
 class _CircleButton extends StatelessWidget {
