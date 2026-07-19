@@ -11,6 +11,7 @@ import 'screens/modul/kuis_screen.dart';
 import 'screens/modul/level_complete_screen.dart';
 import 'screens/modul/games/level1_screen.dart';
 import 'screens/modul/games/level2_screen.dart';
+import 'screens/modul/games/level3_screen.dart';
 import 'screens/modul/level_game_screen.dart';
 import 'screens/leaderboard_screen.dart';
 import 'screens/profile_screen.dart';
@@ -55,6 +56,8 @@ class BobieApp extends StatelessWidget {
             return _buildPageRoute(Level1Screen(gender: gender), settings);
           case '/level2':
             return _buildPageRoute(const Level2Screen(), settings);
+          case '/level3':
+            return _buildPageRoute(const Level3Screen(), settings);
           case '/leaderboard':
             return _buildPageRoute(const LeaderboardScreen(), settings);
           case '/profile':
