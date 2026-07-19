@@ -1,6 +1,6 @@
 {
-    "name": "bobie_app",
-    "short_name": "bobie_app",
+    "name": "BOBIE",
+    "short_name": "BOBIE",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

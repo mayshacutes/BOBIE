@@ -22,21 +22,30 @@ class _Level1ScreenState extends State<Level1Screen> {
   String? _highlightedPart;
   final Set<String> _tappedInA = {};
 
-  final List<_BodyPart> _bodyParts = [
-    _BodyPart('rambut', 'Rambut', 0.50, 0.07, 'left', 0.07),
-    _BodyPart('mata', 'Mata', 0.58, 0.25, 'right', 0.22),
-    _BodyPart('mulut', 'Mulut', 0.50, 0.26, 'left', 0.31),
-    _BodyPart('tangan', 'Tangan', 0.20, 0.51, 'left', 0.53),
+  final List<_BodyPart> _bodyPartsA = [
+    _BodyPart('rambut', 'Rambut', 0.50, 0.11, 'left', 0.11),
+    _BodyPart('mata', 'Mata', 0.58, 0.26, 'right', 0.22),
+    _BodyPart('mulut', 'Mulut', 0.50, 0.30, 'left', 0.35),
+    _BodyPart('tangan', 'Tangan', 0.28, 0.51, 'left', 0.53),
     _BodyPart('perut', 'Perut', 0.50, 0.57, 'right', 0.51),
     _BodyPart('kaki', 'Kaki', 0.56, 0.85, 'right', 0.85),
+  ];
+
+  final List<_BodyPart> _bodyPartsB = [
+    _BodyPart('rambut', 'Rambut', 0.50, 0.07, 'left', 0.07),
+    _BodyPart('mata', 'Mata', 0.58, 0.25, 'right', 0.22),
+    _BodyPart('mulut', 'Mulut', 0.50, 0.267, 'left', 0.317),
+    _BodyPart('tangan', 'Tangan', 0.23, 0.51, 'left', 0.53),
+    _BodyPart('perut', 'Perut', 0.50, 0.57, 'right', 0.51),
+    _BodyPart('kaki', 'Kaki', 0.61, 0.85, 'right', 0.85),
   ];
 
   late Map<String, String?> _dropTargets;
   late List<String> _availableLabels;
 
   void _initGame() {
-    _dropTargets = {for (var p in _bodyParts) p.id: null};
-    _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
+    _dropTargets = {for (var p in _bodyPartsB) p.id: null};
+    _availableLabels = _bodyPartsB.map((p) => p.id).toList()..shuffle();
   }
 
   void _playSound(_BodyPart part) {
@@ -86,7 +95,7 @@ class _Level1ScreenState extends State<Level1Screen> {
     Future.delayed(const Duration(seconds: 5), () {
       if (mounted) {
         int correct = 0;
-        for (var part in _bodyParts) {
+        for (var part in _bodyPartsB) {
           if (_dropTargets[part.id] == part.id) correct++;
         }
         _showCompletionDialog(correct);
@@ -150,8 +159,8 @@ class _Level1ScreenState extends State<Level1Screen> {
                       Navigator.pop(ctx);
                       setState(() {
                         submitted = false;
-                        _dropTargets = {for (var p in _bodyParts) p.id: null};
-                        _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
+                        _dropTargets = {for (var p in _bodyPartsB) p.id: null};
+                        _availableLabels = _bodyPartsB.map((p) => p.id).toList()..shuffle();
                       });
                     },
                   ),
@@ -193,9 +202,9 @@ class _Level1ScreenState extends State<Level1Screen> {
       children: [
         _buildTopBar(),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.fromLTRB(16, 40, 16, 0),
           child: Text('Halo, Tubuhku!',
-              style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.black),
+              style: GoogleFonts.jua(fontSize: 24, fontWeight: FontWeight.w600, color: AppColors.black),
               textAlign: TextAlign.center),
         ),
         Expanded(
@@ -222,7 +231,7 @@ class _Level1ScreenState extends State<Level1Screen> {
                               ),
                             ),
                           ),
-                          for (var part in _bodyParts)
+                          for (var part in _bodyPartsA)
                             Positioned(
                               left: cw * part.markerX - 12,
                               top: ch * part.markerY - 12 + 100,
@@ -262,25 +271,33 @@ class _Level1ScreenState extends State<Level1Screen> {
                     },
                   ),
                 ),
-                const SizedBox(height: 12),
-                Text('Klik bagian tubuh untuk mengetahui namanya',
-                    style: GoogleFonts.jua(fontSize: 14, color: AppColors.darkGray),
-                    textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                SizedBox(
-                  width: 220,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      _initGame();
-                      setState(() => _phase = _LevelPhase.sectionB);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF75D035),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                    ),
-                    child: Text('Uji Pengetahuanku',
-                        style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                Transform.translate(
+                  offset: const Offset(0, -22),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 0),
+                      Text('Klik bagian tubuh untuk mengetahui namanya',
+                          style: GoogleFonts.jua(fontSize: 14, color: AppColors.darkGray),
+                          textAlign: TextAlign.center),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: 220,
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _initGame();
+                            setState(() => _phase = _LevelPhase.sectionB);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF75D035),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                          ),
+                          child: Text('Uji Pengetahuanku',
+                              style: GoogleFonts.jua(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white)),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -298,42 +315,53 @@ class _Level1ScreenState extends State<Level1Screen> {
       children: [
         _buildTopBar(),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
           child: Text('Apa saja bagian tubuhku?',
               style: GoogleFonts.jua(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.black),
               textAlign: TextAlign.center),
         ),
         Expanded(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 8, 0, 24),
-              child: Column(
-                children: [
-                  _buildGameArea(),
-                  const SizedBox(height: 12),
-                  _buildLabelsRow(),
-                  const SizedBox(height: 32),
-                  SizedBox(
-                    width: 200,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: (_allFilled && !submitted) ? _submit : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF75D035),
-                        disabledBackgroundColor: AppColors.gray,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                      ),
-                      child: Text(submitted ? 'Selesai' : 'Submit',
-                          style: GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
+          child: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
+                    child: Column(
+                      children: [
+                        _buildGameArea(),
+                        const SizedBox(height: 12),
+                        _buildLabelsRow(),
+                      ],
                     ),
                   ),
-                ],
+                ),
+              ),
+              Transform.translate(
+                offset: const Offset(0, -40),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 16, 0, 24),
+                  child: SizedBox(
+                  width: 200,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: (_allFilled && !submitted) ? _submit : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF75D035),
+                      disabledBackgroundColor: AppColors.gray,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                    ),
+                    child: Text(submitted ? 'Selesai' : 'Submit',
+                        style: GoogleFonts.jua(fontSize: 18, fontWeight: FontWeight.w600, color: Colors.white)),
+                  ),
+                ),
               ),
             ),
-          ),
+          ],
         ),
-      ],
-    );
+      ),
+    ],
+  );
   }
 
   // ─────────────────────── SHARED WIDGETS ───────────────────────
@@ -359,8 +387,8 @@ class _Level1ScreenState extends State<Level1Screen> {
               if (_phase == _LevelPhase.sectionB) {
                 setState(() {
                   submitted = false;
-                  _dropTargets = {for (var p in _bodyParts) p.id: null};
-                  _availableLabels = _bodyParts.map((p) => p.id).toList()..shuffle();
+                  _dropTargets = {for (var p in _bodyPartsB) p.id: null};
+                  _availableLabels = _bodyPartsB.map((p) => p.id).toList()..shuffle();
                 });
               }
             },
@@ -396,7 +424,7 @@ class _Level1ScreenState extends State<Level1Screen> {
         final rightBoxLeft = W - 24.0 - boxW;
 
         final arrows = <_ArrowData>[];
-        for (var part in _bodyParts) {
+        for (var part in _bodyPartsB) {
           final mX = imageLeft + part.markerX * imageWidth;
           final mY = imageTop + part.markerY * imageHeight;
           final bY = imageTop + part.boxY * areaHeight;
@@ -430,7 +458,7 @@ class _Level1ScreenState extends State<Level1Screen> {
                   ),
                 ),
               ),
-              for (var part in _bodyParts)
+              for (var part in _bodyPartsB)
                 Positioned(
                   left: imageLeft + part.markerX * imageWidth - 5,
                   top: imageTop + part.markerY * imageHeight - 5,
@@ -470,7 +498,7 @@ class _Level1ScreenState extends State<Level1Screen> {
                     ),
                   ),
                 ),
-              for (var part in _bodyParts)
+              for (var part in _bodyPartsB)
                 if (part.side == 'left')
                   Positioned(
                     left: 24,
@@ -560,7 +588,7 @@ class _Level1ScreenState extends State<Level1Screen> {
 
   Widget _buildLabelsRow() {
     if (submitted) return const SizedBox();
-    final labels = _bodyParts.map((p) => p.id).toList();
+    final labels = _bodyPartsB.map((p) => p.id).toList();
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -578,7 +606,7 @@ class _Level1ScreenState extends State<Level1Screen> {
   }
 
   Widget _buildLabelChip(String labelId) {
-    final part = _bodyParts.firstWhere((p) => p.id == labelId);
+    final part = _bodyPartsB.firstWhere((p) => p.id == labelId);
     final isAvailable = _availableLabels.contains(labelId);
     if (!isAvailable) return const SizedBox(width: 90);
     return Padding(
